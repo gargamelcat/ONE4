@@ -146,7 +146,7 @@ int LibVirtDriver::deployment_description_lxc(
     // Emulator path
     // ------------------------------------------------------------------------
     file << "\t<devices>" << endl;
-    emulator_path = "/usr/lib/libvirt_lxc";
+    emulator_path = "/usr/lib/libvirt/libvirt_lxc";
     file << "\t\t<emulator>" << emulator_path << "</emulator>" << endl;
 
     // ---- lxc filesystem ----
