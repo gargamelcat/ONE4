@@ -1081,7 +1081,6 @@ VMM_EC2_ETC_FILES="src/vmm_mad/ec2/vmm_ec2rc \
 
 VMM_EXEC_ETC_FILES="src/vmm_mad/exec/vmm_execrc \
                   src/vmm_mad/exec/vmm_exec_kvm.conf \
-		  src/vmm_mad/exec/vmm_exec_lxc.conf \
                   src/vmm_mad/exec/vmm_exec_xen3.conf \
                   src/vmm_mad/exec/vmm_exec_xen4.conf \
                   src/vmm_mad/exec/vmm_exec_vmware.conf"
