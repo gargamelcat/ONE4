@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# -------------------------------------------------------------------------- #
+# Copyright 2002-2013, OpenNebula Project (OpenNebula.org), C12G Labs        #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+function vifs_rmdir {
+    DIR_TO_RM="$1"
+    FILES_TO_ERASE=`vifs $VI_PARAMS --dir [$DSID]$VMID/$DIR_TO_RM | \
+grep -v "Content Listing"|grep -Fv -- "--------"|egrep -v "^[[:space:]]*$"`
+
+    for file in $FILES_TO_ERASE; do
+        exec_and_log "vifs $VI_PARAMS --force --rm [$DSID]$VMID/$DIR_TO_RM/$file" \
+            "Cannot delete [$DSID]$VMID/$DIR_TO_RM/$file in $DST_HOST"
+    done
+
+    exec_and_log "vifs $VI_PARAMS --force --rm [$DSID]$VMID/$DIR_TO_RM" \
+        "Cannot delete [$DSID]$VMID in $DST_HOST"
+}
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+# DELETE <host:remote_system_ds/disk.i|host:remote_system_ds/> vmid dsid
+#   - host is the target host to deploy the VM
+#   - remote_system_ds is the path for the system datastore in the host
+#   - vmid is the id of the VM
+#   - dsid is the target datastore
+
+DST=$1
+
+VMID=$2
+# We are interested in the system datastore, embedded in the path
+DSID=$(basename $(dirname $(dirname $DST)))
+
+if [ -z "${ONE_LOCATION}" ]; then
+    TMCOMMON=/var/lib/one/remotes/tm/tm_common.sh
+    VMWARERC=/etc/one/vmwarerc
+else
+    TMCOMMON=$ONE_LOCATION/var/remotes/tm/tm_common.sh
+    VMWARERC=$ONE_LOCATION/etc/vmwarerc
+fi
+
+. $TMCOMMON
+
+
+DST_PATH=`arg_path $DST`
+DST_HOST=`arg_host $DST`
+
+#-------------------------------------------------------------------------------
+# Retrieve needed information
+#-------------------------------------------------------------------------------
+
+USE_SSH=$(get_tm_use_ssh $DSID)
+
+#-------------------------------------------------------------------------------
+# Set up datastore
+#-------------------------------------------------------------------------------
+
+vmfs_set_up
+
+#-------------------------------------------------------------------------------
+# Return if deleting a disk, we will delete them when removing the
+# remote_system_ds directory for the VM (remotely)
+#-------------------------------------------------------------------------------
+
+log "Deleting $DST_PATH"
+
+if [ "$USE_SSH" == "yes" ]; then
+    ssh_exec_and_log $DST_HOST "rm -rf $DST_PATH" "Error deleting $DST_PATH"
+else
+    if [ `is_disk $DST_PATH` -eq 1 ]; then
+        vifs_rmdir $(basename $DST_PATH)
+    else
+        DIRS_TO_ERASE=`vifs $VI_PARAMS --dir [$DSID]$VMID|grep -v "Content Listing"|grep -Fv -- "--------"|egrep -v "^[[:space:]]*$"`
+
+        for dir in $DIRS_TO_ERASE; do
+            vifs_rmdir $dir
+        done
+    fi
+fi
+
+exit 0

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# -------------------------------------------------------------------------- #
+# Copyright 2002-2013, OpenNebula Project (OpenNebula.org), C12G Labs        #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+# mvds host:remote_system_ds/disk.i fe:SOURCE vmid dsid
+#   - fe is the front-end hostname
+#   - SOURCE is the path of the disk image in the form DS_BASE_PATH/disk
+#   - host is the target host to deploy the VM
+#   - remote_system_ds is the path for the system datastore in the host
+#   - vmid is the id of the VM
+#   - dsid is the target datastore (0 is the system datastore)
+
+SRC=$1
+DST=$2
+
+VMID=$3
+DSID=$4
+
+if [ -z "${ONE_LOCATION}" ]; then
+    TMCOMMON=/var/lib/one/remotes/tm/tm_common.sh
+    VMWARERC=/etc/one/vmwarerc
+else
+    TMCOMMON=$ONE_LOCATION/var/remotes/tm/tm_common.sh
+    VMWARERC=$ONE_LOCATION/etc/vmwarerc
+fi
+
+. $TMCOMMON
+
+#-------------------------------------------------------------------------------
+# Retrieve needed information, set dst path and dir
+#-------------------------------------------------------------------------------
+SRC_PATH=`arg_path $SRC`
+SRC_HOST=`arg_host $SRC`
+SRC_FOLDER=`basename $SRC_PATH`
+
+DST_PATH=`arg_path $DST`
+DST_HOST=$SRC_HOST
+DST_FOLDER=`basename $DST_PATH`
+
+USE_SSH=$(get_tm_use_ssh $DSID)
+
+IMAGE_DS_NAME=`basename $(dirname $DST_PATH)`
+SYSTEM_DS_NAME=`basename $(dirname $(dirname $SRC_PATH))`
+
+#-------------------------------------------------------------------------------
+# Set up datastore
+#-------------------------------------------------------------------------------
+
+vmfs_set_up
+
+#-------------------------------------------------------------------------------
+# Move the image back to the datastore
+#-------------------------------------------------------------------------------
+
+log "Moving [$SYSTEM_DS_NAME]$VMID/$SRC_FOLDER/disk.vmdk to [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk"
+
+if [ "$USE_SSH" == "yes" ]; then
+
+MVSCRIPT=$(cat <<EOF
+SRC_READLN=eval "$READLINK -f $SRC_PATH"
+DST_READLN=eval "$READLINK -f $DST_PATH"
+
+if [ \( -L $SRC \) -a \( "$SRC_READLN" = "$DST_READLN" \) ] ; then
+	echo "Not moving files to image repo, they are the same"
+else
+	WHICH_SUDO=`which sudo`
+
+	if [ ! -z "$WHICH_SUDO" -a -f "$WHICH_SUDO" ]; then
+		SUDO="sudo "
+	fi
+
+	$SUDO $VMKFSTOOLS -U [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk
+	$SUDO $VMKFSTOOLS -i [$SYSTEM_DS_NAME]$VMID/$SRC_FOLDER/disk.vmdk -d thin [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk
+fi
+
+if [ -d $DST_PATH ]; then
+    chmod 0770 $DST_PATH
+else
+    chmod 0660 $DST_PATH
+fi
+EOF
+)
+
+	ssh_exec_and_log $SRC_HOST "$MVSCRIPT" \
+            "Could not move image [$SYSTEM_DS_NAME]$VMID/$SRC_FOLDER/disk.vmdk to [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk in $SRC_HOST"
+else
+	$VMKFSTOOLS $VI_PARAMS -U [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk &> /dev/null
+	exec_and_log "$VMKFSTOOLS $VI_PARAMS -i [$SYSTEM_DS_NAME]$VMID/$SRC_FOLDER/disk.vmdk -d thin [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk" \
+	             "Could not move image [$SYSTEM_DS_NAME]$VMID/$SRC_FOLDER/disk.vmdk to [$IMAGE_DS_NAME]$DST_FOLDER/disk.vmdk in $SRC_HOST"
+fi
+
+exit 0

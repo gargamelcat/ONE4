@@ -1,0 +1,119 @@
+#!/usr/bin/env ruby
+
+# -------------------------------------------------------------------------- #
+# Copyright 2002-2013, OpenNebula Project (OpenNebula.org), C12G Labs        #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+ONE_LOCATION=ENV["ONE_LOCATION"]
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION="/usr/lib/one/ruby"
+else
+    RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby"
+end
+
+$: << RUBY_LIB_LOCATION
+$: << RUBY_LIB_LOCATION+"/cli"
+
+require 'command_parser'
+require 'one_helper/oneacct_helper'
+
+require 'json'
+
+cmd = CommandParser::CmdParser.new(ARGV) do
+    usage "`oneacct` [<options>]"
+    description ""
+    version OpenNebulaHelper::ONE_VERSION
+
+    helper=OpenNebulaHelper::OneHelper.new
+
+    before_proc do
+        helper.set_client(options)
+    end
+
+    option AcctHelper::ACCT_OPTIONS + CommandParser::OPTIONS +
+        OpenNebulaHelper::CLIENT_OPTIONS
+
+    main do
+        filter_flag = (options[:userfilter] || VirtualMachinePool::INFO_ALL)
+        start_time  = options[:start_time] ? options[:start_time].to_i : -1
+        end_time    = options[:end_time] ? options[:end_time].to_i : -1
+
+        common_opts = {
+            :start_time => start_time,
+            :end_time   => end_time,
+            :host       => options[:host],
+            :group      => options[:group],
+            :xpath      => options[:xpath]
+        }
+
+        pool   = OpenNebula::VirtualMachinePool.new(helper.client)
+
+        if options[:json] || options[:xml]
+            xml_str = pool.accounting_xml(filter_flag, common_opts)
+            if OpenNebula.is_error?(xml_str)
+                puts acct_hash.message
+                exit -1
+            end
+
+            if options[:json]
+                xmldoc = XMLElement.new
+                xmldoc.initialize_xml(xml_str, 'HISTORY_RECORDS')
+
+                puts JSON.pretty_generate(xmldoc.to_hash)
+            elsif options[:xml]
+                puts xml_str
+            end
+
+            exit_code 0
+        else
+            order_by = Hash.new
+            order_by[:order_by_1] = 'VM/UID'
+            order_by[:order_by_2] = 'VM/ID' if options[:split]
+
+            acct_hash = pool.accounting(filter_flag,
+                                        common_opts.merge(order_by))
+            if OpenNebula.is_error?(acct_hash)
+                puts acct_hash.message
+                exit -1
+            end
+
+
+            if ( start_time != -1 or end_time != -1 )
+                AcctHelper.print_start_end_time_header(start_time, end_time)
+            end
+
+            acct_hash.each { |user_id, value|
+                AcctHelper.print_user_header(user_id)
+
+                if options[:split]
+                    # Use one table for each VM
+                    value.each { |vm_id, history_array|
+                        array = history_array['HISTORY_RECORDS']['HISTORY']
+                        AcctHelper::ACCT_TABLE.show(array)
+                        puts
+                    }
+                else
+                    # Use the same table for all the VMs
+                    array = value['HISTORY_RECORDS']['HISTORY']
+                    AcctHelper::ACCT_TABLE.show(array)
+                    puts
+                end
+            }
+
+            exit_code 0
+        end
+    end
+end
