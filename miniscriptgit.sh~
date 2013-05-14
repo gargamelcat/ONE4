@@ -1,4 +1,0 @@
-#!/bin/bash
-
-git remote add redmine gitosis@git.confine-project.eu: https://username@git.confine-project.eu/clommunity/one4.git orgit remote add origin gitosis@git.confine-project.eu: https://username@git.confine-project.eu/clommunity/one4.git
-git push redmine master
