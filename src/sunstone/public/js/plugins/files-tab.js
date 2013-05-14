@@ -44,6 +44,11 @@ var files_tab_content = '\
   </div>\
 </div>\
 </div>\
+  <div class="">\
+    <div class="twelve columns">\
+  <div id="files_upload_progress_bars"></div>\
+</div>\
+</div>\
   <div class="row">\
     <div class="twelve columns">\
 <table id="datatable_files" class="datatable twelve">\
@@ -97,7 +102,7 @@ var create_file_tmpl =
                     <label class="right inline" for="img_desc">'+tr("Description")+':</label>\
                   </div>\
                   <div class="seven columns">\
-                    <textarea name="img_desc" id="img_desc" style="height:4em"></textarea>\
+                    <textarea name="img_desc" id="img_desc" rows="4"></textarea>\
                   </div>\
                   <div class="one columns">\
                     <div class="tip">'+tr("Human readable description of the file for other users.")+'</div>\
@@ -120,46 +125,6 @@ var create_file_tmpl =
                     <div class="tip">'+tr("Type of the file, explained in detail in the following section. If omitted, the default value is the one defined in oned.conf (install default is OS).")+'</div>\
                   </div>\
                 </div>\
-              </div>\
-            </div>\
-           <div class="row">\
-           <fieldset>\
-           <legend>'+tr("File location")+':</legend>\
-           <div class="row" id="src_path_select">\
-                  <div class="five columns centered">\
-                   <input type="radio" name="src_path" id="path_img" value="path">'+ tr("Provide a path")+'&emsp;</input> \
-                   <input type="radio" name="src_path" id="upload_img" value="upload"> '+tr("Upload")+'</input> &emsp;\
-                  </div>\
-           </div>\
-           <div class="img_param row">\
-             <div class="eight columns centered">\
-              <div class="two columns">\
-                <label class="right inline" for="img_path">'+tr("Path")+':</label>\
-              </div>\
-              <div class="nine columns">\
-               <input type="text" name="img_path" id="img_path" />\
-              </div>\
-              <div class="one columns">\
-                <div class="tip">'+tr("Path to the original file that will be copied to the file repository. If not specified for a DATABLOCK type file, an empty file will be created.")+'</div>\
-              </div>\
-           </div>\
-           </div>\
-           <div class="img_param" id="upload_div">\
-           <div class="row centered">\
-           <div class="columns eight">\
-             <div id="file-uploader">\
-             </div><div class="clear" />\
-           </div>\
-           </div>\
-           </div>\
-           </fieldset>\
-           </div>\
-          <div class="show_hide" id="advanced_file_create">\
-               <h4><small><i class=" icon-caret-down"/> '+tr("Advanced options")+'<a id="add_os_boot_opts" class="icon_left" href="#"></a></small></h4>\
-          </div>\
-          <div class="advanced">\
-            <div class="row">\
-              <div class="six columns">\
                 <div class="row">\
                   <div class="four columns">\
                     <label class="right inline" for="file_datastore">'+tr("Datastore")+':</label>\
@@ -174,7 +139,38 @@ var create_file_tmpl =
                 </div>\
               </div>\
             </div>\
+           <div class="row">\
+           <fieldset>\
+           <legend>'+tr("File location")+':</legend>\
+           <div class="row" id="src_path_select">\
+                  <div class="five columns centered">\
+                   <input type="radio" name="src_path" id="path_img" value="path">'+ tr("Provide a path")+'&emsp;</input> \
+                   <input type="radio" name="src_path" id="upload_img" value="upload"> '+tr("Upload")+'</input> &emsp;\
+                  </div>\
+           </div>\
+           <hr>\
+           <div class="img_param row">\
+             <div class="eight columns centered">\
+              <div class="two columns">\
+                <label class="right inline" for="img_path">'+tr("Path")+':</label>\
+              </div>\
+              <div class="nine columns">\
+               <input type="text" name="img_path" id="img_path" />\
+              </div>\
+              <div class="one columns">\
+                <div class="tip">'+tr("Path to the original file that will be copied to the file repository. If not specified for a DATABLOCK type file, an empty file will be created.")+'</div>\
+              </div>\
+           </div>\
+           </div>\
+           <div class="img_param" id="files_upload_div">\
+             <div class="row">\
+                <div class="columns eight centered">\
+                  <div id="files_file-uploader"></div>\
+                </div>\
+             </div>\
             </div>\
+           </fieldset>\
+           </div>\
       <div class="reveal-footer">\
             <hr>\
       <div class="form_buttons">\
@@ -308,7 +304,7 @@ var file_actions = {
         call: OpenNebula.Image.chown,
         callback:  function (req) {
             Sunstone.runAction("File.show",req.request.data[0][0]);
-            Sunstone.runAction('Image.showinfo',request.request.data[0]);
+            Sunstone.runAction('Image.showinfo',req.request.data[0]);
         },
         elements: fileElements,
         error: onError,
@@ -320,7 +316,7 @@ var file_actions = {
         call: OpenNebula.Image.chgrp,
         callback: function (req) {
             Sunstone.runAction("File.show",req.request.data[0][0]);
-            Sunstone.runAction('Image.showinfo',request.request.data[0]);
+            Sunstone.runAction('Image.showinfo',req.request.data[0]);
         },
         elements: fileElements,
         error: onError,
@@ -502,7 +498,6 @@ function updateFilesView(request, files_list){
     });
 
     updateView(file_list_array,dataTable_files);
-    updateVResDashboard("files",files_list);
 
     var size = humanize_size_from_mb(size_files)
 
@@ -642,6 +637,11 @@ function updateFileInfo(request,img){
     Sunstone.updateInfoPanelTab("file_info_panel","file_info_tab",info_tab);
     Sunstone.popUpInfoPanel("file_info_panel", "files-tab");
 
+    $("#file_info_panel_refresh", $("#file_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('File.showinfo', img_info.ID);
+    })
+
     setPermissionsTable(img_info,'');
 
 }
@@ -673,16 +673,10 @@ function setupCreateFileDialog(){
     //});
     dialog.addClass("reveal-modal large max-height");
 
-    $('.advanced',dialog).hide();
-
-    $('#advanced_file_create',dialog).click(function(){
-        $('.advanced',dialog).toggle();
-        return false;
-    });
 
     //$('#img_tabs',dialog).tabs();
     //$('button',dialog).button();
-    //$('#datablock_img',dialog).attr('disabled','disabled');
+    //$('#datablock_img',dialogs_contextog).attr('disabled','disabled');
 
 
     $('select#img_type',dialog).change(function(){
@@ -702,23 +696,23 @@ function setupCreateFileDialog(){
     });
 
 
-    $('#img_path,#img_fstype,#img_size,#file-uploader',dialog).closest('.row').hide();
+    $('#img_path,#img_fstype,#img_size,#files_file-uploader',dialog).closest('.row').hide();
 
     $("input[name='src_path']", dialog).change(function(){
         var context = $create_file_dialog;
         var value = $(this).val();
         switch (value){
         case "path":
-            $('#img_fstype,#img_size,#file-uploader',context).closest('.row').hide();
+            $('#img_fstype,#img_size,#files_file-uploader',context).closest('.row').hide();
             $('#img_path',context).closest('.row').show();
             break;
         case "datablock":
-            $('#img_path,#file-uploader',context).closest('.row').hide();
+            $('#img_path,#files_file-uploader',context).closest('.row').hide();
             $('#img_fstype,#img_size',context).closest('.row').show();
             break;
         case "upload":
             $('#img_path,#img_fstype,#img_size',context).closest('.row').hide();
-            $('#file-uploader',context).closest('.row').show();
+            $('#files_file-uploader',context).closest('.row').show();
             break;
         };
     });
@@ -765,7 +759,7 @@ function setupCreateFileDialog(){
 
     // Upload is handled by FileUploader vendor plugin
     var uploader = new qq.FileUploaderBasic({
-        button: $('#file-uploader',$create_file_dialog)[0],
+        button: $('#files_file-uploader',$create_file_dialog)[0],
         action: 'upload',
         multiple: false,
         params: {},
@@ -797,16 +791,28 @@ function setupCreateFileDialog(){
             //                      position: [pos_left, pos_top]
             //                  });
 
-            var pb_dialog = $('<div id="pb_dialog" title="'+
-                              tr("Uploading...")+'">'+
-                              '<div id="upload-progress"></div>'+
-                              '</div>').addClass("reveal-modal");
+
+            $('#files_upload_progress_bars').append('<div id="files'+id+'progressBar" class="row" style="margin-bottom:10px">\
+              <div class="two columns dataTables_info">\
+                '+tr("Uploading...")+'\
+              </div>\
+              <div class="ten columns">\
+                <div id="upload_progress_container" class="progress nine radius" style="height:25px !important">\
+                  <span class="meter" style="width:0%"></span>\
+                </div>\
+                <div class="progress-text" style="margin-left:15px">'+id+' '+fileName+'</div>\
+              </div>\
+            </div>');
+
+            $('#files'+id+'cancel_upload').click(function(){
+              uploader.cancel();
+            })
 
             //$('#upload-progress',pb_dialog).progressbar({value:0});
         },
         onProgress: function(id, fileName, loaded, total){
             //update upload dialog with current progress
-            //$('div#pb_dialog #upload-progress').progressbar("option","value",Math.floor(loaded*100/total));
+            $('span.meter', $('#files'+id+'progressBar')).css('width', Math.floor(loaded*100/total)+'%')
         },
         onComplete: function(id, fileName, responseJSON){
 
@@ -814,9 +820,11 @@ function setupCreateFileDialog(){
                 uploader._handler._xhrs[id].status == 500) {
 
                 onError({}, JSON.parse(uploader._handler._xhrs[id].response) )
+                $('#files'+id+'progressBar').remove();
             } else {
                 notifyMessage("File uploaded correctly");
                 Sunstone.runAction("File.list");
+                $('#files'+id+'progressBar').remove();
             }
 
             //Inform complete upload, destroy upload dialog, refresh img list
@@ -924,8 +932,8 @@ function setupCreateFileDialog(){
 }
 
 function popUpCreateFileDialog(){
-    $('#file-uploader input',$create_file_dialog).removeAttr("style");
-    $('#file-uploader input',$create_file_dialog).attr('style','margin:0;width:256px!important');
+    $('#files_file-uploader input',$create_file_dialog).removeAttr("style");
+    $('#files_file-uploader input',$create_file_dialog).attr('style','margin:0;width:256px!important');
 
     datastores_str = makeSelectOptions(dataTable_datastores,
                                           1,
@@ -946,7 +954,7 @@ function setFileAutorefresh() {
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_files);
         var filter = $("#file_search").attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("File.autorefresh");
         }
     },INTERVAL+someTime());

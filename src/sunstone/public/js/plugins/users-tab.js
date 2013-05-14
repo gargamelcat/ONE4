@@ -20,6 +20,7 @@ var users_select="";
 var $create_user_dialog;
 var $user_quotas_dialog;
 var $update_pw_dialog;
+var $change_auth_dialog;
 
 var user_acct_graphs = [
     { title : tr("CPU"),
@@ -80,9 +81,9 @@ var users_tab_content = '\
       <th>'+tr("Name")+'</th>\
       <th>'+tr("Group")+'</th>\
       <th>'+tr("Auth driver")+'</th>\
-      <th style="width:18%">'+tr("VMs")+'</th>\
-      <th style="width:18%">'+tr("Memory")+'</th>\
-      <th style="width:18%">'+tr("CPU")+'</th>\
+      <th>'+tr("VMs")+'</th>\
+      <th>'+tr("Memory")+'</th>\
+      <th>'+tr("CPU")+'</th>\
       <th>'+tr("Group ID")+'</th>\
     </tr>\
   </thead>\
@@ -92,6 +93,21 @@ var users_tab_content = '\
   </div>\
   </div>\
 </form>';
+
+// authn = "ssh,x509,ldap,server_cipher,server_x509"
+
+var auth_drivers_div =
+'<select name="driver" id="driver">\
+     <option value="core" selected="selected">'+tr("Core")+'</option>\
+     <option value="ssh">'+tr("SSH")+'</option>\
+     <option value="x509">'+tr("x509")+'</option>\
+     <option value="ldap">'+tr("LDAP")+'</option>\
+     <option value="public">'+tr("Public")+'</option>\
+     <option value="custom">'+tr("Custom")+'</option>\
+</select>\
+<div>\
+  <input type="text" name="custom_auth" />\
+</div>';
 
 var create_user_tmpl =
 '<div class="panel">\
@@ -126,18 +142,7 @@ var create_user_tmpl =
           <div class="four columns">\
               <label class="inline right" for="driver">'+tr("Authentication")+':</label>\
           </div>\
-          <div class="seven columns">\
-            <select name="driver" id="driver">\
-                 <option value="core" selected="selected">'+tr("Core")+'</option>\
-                 <option value="ssh">'+tr("SSH")+'</option>\
-                 <option value="x509">'+tr("x509")+'</option>\
-                 <option value="public">'+tr("Public")+'</option>\
-                 <option value="custom">'+tr("Custom")+'</option>\
-            </select>\
-            <div>\
-              <input type="text" name="custom_auth" />\
-            </div>\
-          </div>\
+          <div class="seven columns">'+auth_drivers_div+'</div>\
           <div class="one columns">\
               <div class=""></div>\
           </div>\
@@ -172,6 +177,26 @@ var update_pw_tmpl = '<div class="panel">\
           <button class="button radius right success" id="update_pw_submit" type="submit" value="User.update">'+tr("Change")+'</button>\
           <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
       </div>\
+  <a class="close-reveal-modal">&#215;</a>\
+</form>';
+
+var change_password_tmpl = '<div class="panel">\
+  <h3>\
+    <small id="change_password_header">'+tr("Change authentication")+'</small>\
+  </h3>\
+</div>\
+<form id="change_password_form" action="">\
+  <div class="row">\
+    <div id="confirm_with_select_tip">'+tr("Please choose the new type of authentication for the selected users")+':\
+    </div>\
+  </div>\
+  <div class="row">'+auth_drivers_div+'\
+  </div>\
+  <hr>\
+  <div class="form_buttons">\
+    <button class="button radius right success" id="change_password_submit" type="submit" value="User.change_authentication">'+tr("Change")+'</button>\
+    <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
+  </div>\
   <a class="close-reveal-modal">&#215;</a>\
 </form>';
 
@@ -403,6 +428,10 @@ var user_actions = {
         notify: true
     },
 
+    "User.change_authentication" : {
+        type: "custom",
+        call: popUpChangeAuthenticationDialog
+    },
     "User.chauth" : {
         type: "multiple",
         call: OpenNebula.User.chauth,
@@ -413,7 +442,6 @@ var user_actions = {
         error: onError,
         notify: true
     },
-
     "User.show" : {
         type: "single",
         call: OpenNebula.User.show,
@@ -472,8 +500,9 @@ var user_actions = {
         type: "multiple",
         call: OpenNebula.User.set_quota,
         elements: userElements,
-        callback: function() {
+        callback: function(request) {
             notifyMessage(tr("Quotas updated correctly"));
+            Sunstone.runAction('User.showinfo',request.request.data[0]);
         },
         error: onError
     },
@@ -513,6 +542,11 @@ var user_buttons = {
         layout: "more_select",
         text : tr("Change password")
     },
+    "User.change_authentication" : {
+        type : "action",
+        layout: "more_select",
+        text : tr("Change authentication")
+    },
     "User.quotas_dialog" : {
         type : "action",
         layout: "more_select",
@@ -525,20 +559,6 @@ var user_buttons = {
         layout: "user_select",
         select: groups_sel,
         tip: tr("This will change the main group of the selected users. Select the new group")+":",
-        condition: mustBeAdmin
-    },
-    "User.chauth" : {
-        type: "confirm_with_select",
-        text: tr("Change authentication"),
-        layout: "user_select",
-        //We insert our custom select there.
-        select: function() {
-            return   '<option value="core" selected="selected">'+tr("Core")+'</option>\
-                     <option value="ssh">'+tr("SSH")+'</option>\
-                     <option value="x509">'+tr("x509")+'</option>\
-                     <option value="public">'+tr("Public")+'</option>'
-        },
-        tip: tr("Please choose the new type of authentication for the selected users")+":",
         condition: mustBeAdmin
     },
     "User.delete" : {
@@ -581,48 +601,6 @@ var users_tab_non_admin = {
     parentTab: 'dashboard-tab',
     condition: mustNotBeAdmin
 }
-
-
-SunstoneMonitoringConfig['USER'] = {
-    plot: function(monitoring){
-        //plot only when i am admin
-        if (!mustBeAdmin()) return;
-
-        //plot the number of total users
-        $('#totalUsers', $dashboard).text(monitoring['totalUsers'])
-
-        //if (!$dashboard.is(':visible')) return;
-
-        //plot users per group
-        var container = $('div#usersPerGroup',$dashboard);
-        SunstoneMonitoring.plot('USER',
-                                'usersPerGroup',
-                                container,
-                                monitoring['usersPerGroup']);
-    },
-    monitor: {
-        "usersPerGroup" : {
-            //we want to monitor users divided by GNAME to paint bars.
-            partitionPath: "GNAME",
-            operation: SunstoneMonitoring.ops.partition,
-            dataType: "bars",
-            plotOptions: {
-                series: { bars: {show: true, barWidth: 0.5, align: 'center' }},
-                xaxis: { show: true, customLabels: true },
-                yaxis: { tickDecimals: 0,
-                         min: 0 },
-                legend : {
-                    show: false,
-                    noColumns: 2
-                }
-            }
-        },
-        "totalUsers" : {
-            operation: SunstoneMonitoring.ops.totalize
-        }
-    }
-}
-
 
 Sunstone.addActions(user_actions);
 Sunstone.addMainTab('users-tab',users_tab);
@@ -713,9 +691,7 @@ function updateUsersView(request,users_list){
         user_list_array.push(userElementArray(this));
     });
     updateView(user_list_array,dataTable_users);
-    //SunstoneMonitoring.monitor('USER', users_list)
-    //if (mustBeAdmin())
-    //    updateSystemDashboard("users",users_list);
+
     updateUserSelect();
 
     $("#total_users", $dashboard).text(users_list.length);
@@ -781,6 +757,11 @@ function updateUserInfo(request,user){
     Sunstone.updateInfoPanelTab("user_info_panel","user_quotas_tab",quotas_tab);
     //Sunstone.updateInfoPanelTab("user_info_panel","user_acct_tab",acct_tab);
     Sunstone.popUpInfoPanel("user_info_panel", 'users-tab');
+
+    $("#user_info_panel_refresh", $("#user_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('User.showinfo', info.ID);
+    })
 };
 
 // Prepare the user creation dialog
@@ -856,6 +837,37 @@ function setupUpdatePasswordDialog(){
     });
 };
 
+function setupChangeAuthenticationDialog(){
+    dialogs_context.append('<div title="'+tr("Change authentication")+'" id="change_user_auth_dialog"></div>');
+    $change_auth_dialog = $('#change_user_auth_dialog',dialogs_context);
+    var dialog = $change_auth_dialog;
+    dialog.html(change_password_tmpl);
+
+    dialog.addClass("reveal-modal");
+
+    $('input[name="custom_auth"]',dialog).parent().hide();
+    $('select#driver').change(function(){
+        if ($(this).val() == "custom")
+            $('input[name="custom_auth"]',dialog).parent().show();
+        else
+            $('input[name="custom_auth"]',dialog).parent().hide();
+    });
+
+    $('#change_password_form',dialog).submit(function(){
+        var driver = $('#driver', this).val();
+        if (driver == 'custom')
+            driver = $('input[name="custom_auth"]', this).val();
+
+        if (!driver.length){
+            notifyError(tr("Fill in a new auth driver"));
+            return false;
+        }
+
+        Sunstone.runAction("User.chauth",getSelectedNodes(dataTable_users), driver);
+        $change_auth_dialog.trigger("reveal:close")
+        return false;
+    });
+};
 
 //add a setup quota dialog and call the sunstone-util.js initialization
 function setupUserQuotasDialog(){
@@ -882,12 +894,17 @@ function popUpUpdatePasswordDialog(){
     $update_pw_dialog.reveal();
 }
 
+function popUpChangeAuthenticationDialog(){
+    $('#driver',$change_auth_dialog).val("");
+    $change_auth_dialog.reveal();
+}
+
 // Prepare the autorefresh of the list
 function setUserAutorefresh(){
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_users);
         var filter = $("#user_search").attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("User.autorefresh");
         }
     },INTERVAL+someTime());
@@ -901,6 +918,7 @@ $(document).ready(function(){
         "aoColumnDefs": [
             { "bSortable": false, "aTargets": ["check",5,6,7] },
             { "sWidth": "35px", "aTargets": [0] },
+            { "sWidth": "150px", "aTargets": [5,6,7] },
             { "bVisible": true, "aTargets": Config.tabTableColumns(tab_name)},
             { "bVisible": false, "aTargets": ['_all']}
         ]
@@ -914,6 +932,7 @@ $(document).ready(function(){
 
     setupCreateUserDialog();
     setupUpdatePasswordDialog();
+    setupChangeAuthenticationDialog();
     setupUserQuotasDialog();
     setUserAutorefresh();
     //Setup quota icons

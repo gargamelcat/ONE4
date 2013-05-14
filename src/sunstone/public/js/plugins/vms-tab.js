@@ -180,53 +180,6 @@ var vm_actions = {
         callback: updateVMInfo,
         error: onError
     },
-
-    "VM.showdisks" : {
-        type: "single",
-        call: OpenNebula.VM.show,
-        callback: function(request, vm){
-          updateVMachineElement(request, vm);
-          updateVMDisksInfo(request, vm);
-        },
-        error: onError
-    },
-
-    "VM.shownics" : {
-        type: "single",
-        call: OpenNebula.VM.show,
-        callback: function(request, vm){
-          updateVMachineElement(request, vm);
-          updateVMNicsInfo(request, vm);
-        },
-        error: onError
-    },
-    "VM.showcapacity" : {
-        type: "single",
-        call: OpenNebula.VM.show,
-        callback: function(request, vm){
-          updateVMachineElement(request, vm);
-          updateVMCapacityInfo(request, vm);
-        },
-        error: onError
-    },
-    "VM.showsnapshots" : {
-        type: "single",
-        call: OpenNebula.VM.show,
-        callback: function(request, vm){
-          updateVMachineElement(request, vm);
-          updateVMSnapshotsInfo(request, vm);
-        },
-        error: onError
-    },
-    "VM.showscheduling" : {
-        type: "single",
-        call: OpenNebula.VM.show,
-        callback: function(request, vm){
-          updateVMachineElement(request, vm);
-          updateActionsInfo(request, vm);
-        },
-        error: onError
-    },
     "VM.refresh" : {
         type: "custom",
         call : function (){
@@ -390,7 +343,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.saveas,
         callback: function(request) {
-            Sunstone.runAction("VM.showdisks", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error:onError,
         notify: true
@@ -400,7 +353,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.snapshot_create,
         callback: function(request) {
-            Sunstone.runAction("VM.showsnapshots", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error:onError,
         notify: true
@@ -409,7 +362,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.snapshot_revert,
         callback: function(request) {
-            Sunstone.runAction("VM.showsnapshots", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error:onError,
         notify: true
@@ -418,7 +371,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.snapshot_delete,
         callback: function(request) {
-            Sunstone.runAction("VM.showsnapshots", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error:onError,
         notify: true
@@ -633,7 +586,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.attachdisk,
         callback: function(request) {
-            Sunstone.runAction("VM.showdisks", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError,
         notify: true
@@ -642,7 +595,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.detachdisk,
         callback: function(request) {
-            Sunstone.runAction("VM.showdisks", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError,
         notify: true
@@ -651,7 +604,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.attachnic,
         callback: function(request) {
-            Sunstone.runAction("VM.shownics", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError,
         notify: true
@@ -660,7 +613,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.resize,
         callback: function(request) {
-            Sunstone.runAction("VM.showcapacity", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError,
         notify: true
@@ -669,7 +622,7 @@ var vm_actions = {
         type: "single",
         call: OpenNebula.VM.detachnic,
         callback: function(request) {
-            Sunstone.runAction("VM.shownics", request.request.data[0]);
+            Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError,
         notify: true
@@ -710,7 +663,7 @@ var vm_actions = {
         call: OpenNebula.VM.update,
         callback: function(request,response){
            notifyMessage(tr("VirtualMachine updated correctly"));
-           Sunstone.runAction("VM.showscheduling", request.request.data[0]);
+           Sunstone.runAction("VM.showinfo", request.request.data[0]);
         },
         error: onError
     },
@@ -794,7 +747,7 @@ var vm_buttons = {
         type: "action",
         text: '<i class="icon-play"/>',
         layout: "vmsplay_buttons",
-        tip: tr("This will resume selected stopped or suspended VMs")
+        tip: tr("This will resume selected VMs")
     },
     "VM.stop" : {
         type: "action",
@@ -806,7 +759,7 @@ var vm_buttons = {
         type: "action",
         text: tr("Boot"),
         layout: "vmsplanification_buttons",
-        tip: tr("This will redeploy selected VMs (in UNKNOWN or BOOT state)")
+        tip: tr("This will force the hypervisor boot action of VMs stuck in UNKNOWN or BOOT state")
     },
     "VM.reboot" : {
         type: "action",
@@ -824,13 +777,13 @@ var vm_buttons = {
         type: "action",
         text: tr("Power Off"),
         layout: "vmspause_buttons",
-        tip: tr("This will send a power off signal to running VMs. They can be restarted later.")
+        tip: tr("This will send a power off signal to running VMs. They can be resumed later.")
     },
     "VM.poweroff_hard" : {
         type: "action",
         text: tr("Power Off") + ' <span class="label secondary radius">hard</span>',
         layout: "vmspause_buttons",
-        tip: tr("This will send a power off signal to running VMs. They can be restarted later.")
+        tip: tr("This will send a forced power off signal to running VMs. They can be resumed later.")
     },
     "VM.undeploy" : {
         type: "action",
@@ -900,115 +853,6 @@ var vms_tab = {
     tabClass: 'subTab',
     parentTab: 'vresources-tab'
 };
-
-SunstoneMonitoringConfig['VM'] = {
-    plot: function(monitoring){
-        // we have the monitoring information and we need to
-        // send it somewhere to be plotted
-
-        // Write total VMs
-        $('#totalVMs', $dashboard).text(monitoring['totalVMs'])
-
-        // Calculate bandwidth
-        // netUsage object is global variable and stores last values of
-        // BU, BD and the time they were stored.
-        // According to the current values and time, we can calculate
-        // how much bandwith we are using.
-        // Once done, we update the netUsage object with the new values
-        // for the next time.
-
-        var t = ((new Date().getTime()) - netUsage.time) / 1000 //in secs
-        var bandwidth_up = monitoring['netUsageBar'][1].data[0][0] - netUsage.up
-        bandwidth_up /= t
-        var bandwidth_up_str = humanize_size(bandwidth_up,true) + "B/s" //bytes /sec
-        var bandwidth_down = monitoring['netUsageBar'][0].data[0][0] - netUsage.down
-        bandwidth_down /= t
-        var bandwidth_down_str = humanize_size(bandwidth_down,true) + "B/s" //bytes /sec
-
-        if (bandwidth_up >= 0)
-            $('#bandwidth_up', $dashboard).text(bandwidth_up_str)
-        if (bandwidth_down >= 0)
-            $('#bandwidth_down', $dashboard).text(bandwidth_down_str)
-
-        netUsage.time = new Date().getTime()
-        netUsage.up = monitoring['netUsageBar'][1].data[0][0]
-        netUsage.down = monitoring['netUsageBar'][0].data[0][0]
-
-        //if (!$dashboard.is(':visible')) return;
-
-        // plot these two graphs
-        var container = $('div#vmStatePie',$dashboard);
-        SunstoneMonitoring.plot('VM',
-                                'statePie',
-                                container,
-                                monitoring['statePie']);
-
-        container = $('div#netUsageBar',$dashboard);
-        SunstoneMonitoring.plot('VM',
-                                'netUsageBar',
-                                container,
-                                monitoring['netUsageBar']);
-    },
-    monitor: {
-        "totalVMs" : {
-            operation: SunstoneMonitoring.ops.totalize
-        },
-        "statePie" : {
-            partitionPath: "STATE",
-            operation: SunstoneMonitoring.ops.partition,
-            dataType: "pie",
-            colorize: function(state){
-                switch (state) {
-                case '0': return "rgb(160,160,160)" //light gray - init
-                case '1': return "rgb(239,201,86)" //yellow - pending
-                case '2': return "rgb(237,154,64)" //orange - hold
-                case '3': return "rgb(108,183,108)" //green - active
-                case '4': return "rgb(175,216,248)" //blue - stopped
-                case '5': return "rgb(112,164,205)" //dark blue - suspended
-                case '6': return "rgb(71,71,71)" //gray - done
-                case '7': return "rgb(203,75,75)" //red - failed
-
-                }
-            },
-            plotOptions : {
-                series: { pie: { show: true  } },
-                legend : {
-                    labelFormatter: function(label, series){
-                        return OpenNebula.Helper.resource_state("vm",label) +
-                            ' - ' + series.data[0][1] + ' (' +
-                            Math.floor(series.percent) + '%' + ')';
-                    }
-                }
-            }
-        },
-        "netUsageBar" : {
-            // Show in a single var the values from netrx and nettx
-            paths: [ "NET_RX", "NET_TX" ],
-            operation: SunstoneMonitoring.ops.singleBar,
-            plotOptions: {
-                series: { bars: { show: true,
-                                  horizontal: true,
-                                  barWidth: 0.5 }
-                        },
-                yaxis: { show: false },
-                xaxis: {
-                    min: 0,
-                    tickFormatter : function(val,axis) {
-                        return humanize_size(val,true);
-                    }
-                },
-                legend: {
-                    noColumns: 3,
-                    container: '#netUsageBar_legend',
-                    labelFormatter: function(label, series){
-                        return label + " - " + humanize_size(series.data[0][0],true)
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 Sunstone.addActions(vm_actions);
 Sunstone.addMainTab('vms-tab',vms_tab);
@@ -1184,8 +1028,6 @@ function updateVMachinesView(request, vmachine_list){
     }
 
     updateView(vmachine_list_array,dataTable_vMachines);
-    //SunstoneMonitoring.monitor('VM', vmachine_list)
-    //updateVResDashboard("vms",vmachine_list);
 
     $("#total_vms", $dashboard).text(vmachine_list.length);
     $("#active_vms", $dashboard).text(active_vms);
@@ -1536,6 +1378,11 @@ function updateVMInfo(request,vm){
 
     // Populate permissions grid
     setPermissionsTable(vm_info,'');
+
+    $("#vm_info_panel_refresh", $("#vm_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('VM.showinfo', vm_info.ID);
+    })
 }
 
 function updateVMDisksInfo(request,vm){
@@ -1894,17 +1741,16 @@ function printDisks(vm_info){
      <div class="">\
         <div id="datatable_cluster_vnets_info_div columns twelve">\
            <form id="hotplugging_form" vmid="'+vm_info.ID+'" >\
-              <div class="twelve columns">\
-                <div id="refresh_disk" class="button small secondary radius" ><i class="icon-refresh"/></div>'
+              <div class="twelve columns">'
 
     if (Config.isTabActionEnabled("vms-tab", "VM.attachdisk")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
       if (vm_info.STATE == "3" && vm_info.LCM_STATE == "3"){
         html += '\
-           <div id="attach_disk" class="button small secondary radius" >' + tr("Attach new disk") +'</div>'
+           <button id="attach_disk" class="button small secondary radius" >' + tr("Attach new disk") +'</button>'
       } else {
         html += '\
-           <div id="attach_disk" class="button small secondary radius" disabled="disabled">' + tr("Attach new disk") +'</div>'
+           <button id="attach_disk" class="button small secondary radius" disabled="disabled">' + tr("Attach new disk") +'</button>'
       }
     }
 
@@ -1989,8 +1835,11 @@ function printDisks(vm_info){
               actions = '';
 
               if (Config.isTabActionEnabled("vms-tab", "VM.saveas")) {
-                if ((vm_info.STATE == "3" && vm_info.LCM_STATE == "3") || vm_info.STATE == "5" || vm_info.STATE == "8") {
-                  actions += '<a href="VM.saveas" class="saveas" ><i class="icon-save"/>'+tr("Snapshot")+'</a> &emsp;'
+                // Check if its volatie
+                if (disk.IMAGE_ID) {
+                  if ((vm_info.STATE == "3" && vm_info.LCM_STATE == "3") || vm_info.STATE == "5" || vm_info.STATE == "8") {
+                    actions += '<a href="VM.saveas" class="saveas" ><i class="icon-save"/>'+tr("Snapshot")+'</a> &emsp;'
+                  }
                 }
               }
 
@@ -2078,7 +1927,7 @@ function setupSaveAsDialog(){
           </div>\
           <div class="one columns">\
               <div class="tip">'+tr("Sets the specified VM disk to be saved in a new Image.")+'<br><br>\
-        '+tr("Deferred: The Image is created immediately, but the contents are saved only if the VM is shut down gracefully (i.e., using Shutdown or Cancel; not Delete)")+'<br><br>\
+        '+tr("Deferred: The Image is created immediately, but the contents are saved only if the VM is shut down gracefully (i.e., using Shutdown; not Delete)")+'<br><br>\
         '+tr("Hot: The Image will be saved immediately.")+'</div>\
           </div>\
       </div>\
@@ -2228,23 +2077,6 @@ function hotpluggingOps(){
           return false;
       });
     }
-
-    $('#refresh_disk').live('click', function(){
-        var b = $(this);
-        var vm_id = b.parents('form').attr('vmid');
-        Sunstone.runAction("VM.showdisks", vm_id);
-
-        return false;
-    });
-}
-
-
-
-
-function updateVMNicsInfo(request,vm){
-  $("li#vm_network_tabTab").html(printNics(vm.VM));
-  Sunstone.runAction("VM.monitor",vm.VM.ID,
-        { monitor_resources : "CPU,MEMORY,NET_TX,NET_RX"});
 }
 
 function printNics(vm_info){
@@ -2252,17 +2084,16 @@ function printNics(vm_info){
      <div class="">\
         <div>\
            <form id="tab_network_form" vmid="'+vm_info.ID+'" >\
-              <div class="twelve columns">\
-                <div id="refresh_nic" class="button small secondary radius" ><i class="icon-refresh"/></div>'
+              <div class="twelve columns">'
 
     if (Config.isTabActionEnabled("vms-tab", "VM.attachnic")) {
       // If VM is not RUNNING, then we forget about the attach nic form.
       if (vm_info.STATE == "3" && vm_info.LCM_STATE == "3"){
         html += '\
-           <div id="attach_nic" class="button small secondary radius" >' + tr("Attach new nic") +'</div>'
+           <button id="attach_nic" class="button small secondary radius" >' + tr("Attach new nic") +'</button>'
       } else {
         html += '\
-           <div id="attach_nic" class="button small secondary radius" disabled="disabled">' + tr("Attach new nic") +'</div>'
+           <button id="attach_nic" class="button small secondary radius" disabled="disabled">' + tr("Attach new nic") +'</button>'
       }
     }
 
@@ -2277,10 +2108,10 @@ function printNics(vm_info){
              <tr>\
                 <th>'+tr("ID")+'</th>\
                 <th>'+tr("Network")+'</th>\
-                <th>'+tr("VLAN")+'</th>\
-                <th>'+tr("Bridge")+'</th>\
                 <th>'+tr("IP")+'</th>\
                 <th>'+tr("MAC")+'</th>\
+                <th>'+tr("IPv6 Site")+'</th>\
+                <th>'+tr("IPv6 Global")+'</th>\
                 <th colspan="">'+tr("Actions")+'</th>\
               </tr>\
            </thead>\
@@ -2296,7 +2127,7 @@ function printNics(vm_info){
     if (!nics.length){
         html += '\
           <tr id="no_nics_tr">\
-            <td colspan="6">' + tr("No nics to show") + '</td>\
+            <td colspan="7">' + tr("No nics to show") + '</td>\
           </tr>';
     }
     else {
@@ -2304,7 +2135,7 @@ function printNics(vm_info){
         for (var i = 0; i < nics.length; i++){
             var nic = nics[i];
 
-            var save_as;
+            var actions;
             // Attach / Detach
             if (
                ( // ACTIVE
@@ -2330,10 +2161,10 @@ function printNics(vm_info){
               <tr nic_id="'+(nic.NIC_ID)+'">\
                 <td>' + nic.NIC_ID + '</td>\
                 <td>' + nic.NETWORK + '</td>\
-                <td>' + nic.VLAN + '</td>\
-                <td>' + nic.BRIDGE + '</td>\
                 <td>' + nic.IP + '</td>\
                 <td>' + nic.MAC + '</td>\
+                <td>' + (nic.IP6_SITE ? nic.IP6_SITE : "--") +'</td>\
+                <td>' + (nic.IP6_GLOBAL ? nic.IP6_GLOBAL : "--") +'</td>\
                 <td>' + actions + '</td>\
             </tr>';
         }
@@ -2489,22 +2320,6 @@ function setup_vm_network_tab(){
           return false;
       });
     }
-
-    $('#refresh_nic').live('click', function(){
-        var b = $(this);
-        var vm_id = b.parents('form').attr('vmid');
-        Sunstone.runAction("VM.shownics", vm_id);
-
-        return false;
-    });
-}
-
-
-
-function updateVMCapacityInfo(request,vm){
-  $("li#vm_capacity_tabTab").html(printCapacity(vm.VM));
-  Sunstone.runAction("VM.monitor",vm.VM.ID,
-        { monitor_resources : "CPU,MEMORY,NET_TX,NET_RX"});
 }
 
 function printCapacity(vm_info){
@@ -2512,12 +2327,11 @@ function printCapacity(vm_info){
      <div class="">\
         <div>\
            <form id="tab_capacity_form" vmid="'+vm_info.ID+'" >\
-              <div class="twelve columns">\
-                <div id="refresh_capacity" class="button small secondary radius" ><i class="icon-refresh"/></div>'
+              <div class="twelve columns">'
 
     if (Config.isTabActionEnabled("vms-tab", "VM.resize")) {
-      // If VM is not RUNNING, then we forget about the attach nic form.
-      if (vm_info.STATE == "0" || vm_info.STATE == "1" || vm_info.STATE == "2" || vm_info.STATE == "7" || vm_info.STATE == "8"){
+      // If VM is not INIT, PENDING, HOLD, FAILED, POWEROFF, UNDEPLOYED, then we forget about the resize form.
+      if (vm_info.STATE == "0" || vm_info.STATE == "1" || vm_info.STATE == "2" || vm_info.STATE == "7" || vm_info.STATE == "8" || vm_info.STATE == "9"){
         html += '\
           <button id="resize_capacity" class="button small secondary radius" >' + tr("Resize VM capacity") +'</button>'
       } else {
@@ -2681,14 +2495,6 @@ function setup_vm_capacity_tab(){
           return false;
       });
     }
-
-    $('#refresh_capacity').live('click', function(){
-        var b = $(this);
-        var vm_id = b.parents('form').attr('vmid');
-        Sunstone.runAction("VM.showcapacity", vm_id);
-
-        return false;
-    });
 }
 
 
@@ -2704,17 +2510,16 @@ function printSnapshots(vm_info){
      <div class="">\
         <div id="columns twelve">\
            <form id="snapshot_form" vmid="'+vm_info.ID+'" >\
-              <div class="twelve columns">\
-                <div id="refresh_snapshot" class="button small secondary radius" ><i class="icon-refresh"/></div>'
+              <div class="twelve columns">'
 
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_create")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
       if (vm_info.STATE == "3" && vm_info.LCM_STATE == "3"){
         html += '\
-           <div id="take_snapshot" class="button small secondary radius" >' + tr("Take snapshot") +'</div>'
+           <button id="take_snapshot" class="button small secondary radius" >' + tr("Take snapshot") +'</button>'
       } else {
         html += '\
-           <div id="take_snapshot" class="button small secondary radius" disabled="disabled">' + tr("Take snapshot") +'</div>'
+           <button id="take_snapshot" class="button small secondary radius" disabled="disabled">' + tr("Take snapshot") +'</button>'
       }
     }
 
@@ -2902,14 +2707,6 @@ function setup_vm_snapshot_tab(){
           return false;
       });
     }
-
-    $('#refresh_snapshot').live('click', function(){
-        var b = $(this);
-        var vm_id = b.parents('form').attr('vmid');
-        Sunstone.runAction("VM.showsnapshots", vm_id);
-
-        return false;
-    });
 }
 
 
@@ -2994,7 +2791,7 @@ function setVMAutorefresh(){
      setInterval(function(){
          var checked = $('input.check_item:checked',dataTable_vMachines);
          var filter = $("#vms_search").attr('value');
-         if (!checked.length && !filter.length){
+         if ((checked.length==0) && !filter){
              Sunstone.runAction("VM.autorefresh");
          };
      },INTERVAL+someTime());

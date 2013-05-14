@@ -1,0 +1,4 @@
+g++ .xmlrpc_test/xmlrpc_test.08e79e.cc -o .xmlrpc_test/xmlrpc_test.08e79e.cc.out  -pthread -L/usr/lib   -lxmlrpc_client++ -lxmlrpc_client -lxmlrpc++ -lxmlrpc -lxmlrpc_util -lxmlrpc_xmlparse -lxmlrpc_xmltok -L/usr/lib/x86_64-linux-gnu -lcurl -Wl,-Bsymbolic-functions -Wl,-z,relro -lxmlrpc_packetsocket -I/usr/include 1>>.xmlrpc_test/xmlrpc_test.08e79e.cc.log 2>&1
+/usr/bin/ld: cannot find -lcurl
+collect2: ld returned 1 exit status
+g++ .xmlrpc_test/xmlrpc_test.08e79e.cc -o .xmlrpc_test/xmlrpc_test.08e79e.cc.out  -pthread -I/usr/include -L/usr/lib -lxmlrpc_client -lxmlrpc_client -lxmlrpc -lxmlrpc_util -lxmlrpc_xmlparse -lxmlrpc_xmltok -lxmlrpc_client++ -lxmlrpc++ 1>>.xmlrpc_test/xmlrpc_test.08e79e.cc.log 2>&1

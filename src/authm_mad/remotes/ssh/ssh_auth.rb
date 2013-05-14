@@ -37,29 +37,33 @@ class OpenNebula::SshAuth
         @private_key = nil
         @public_key  = nil
 
+        # Initialize the private key
         if options[:private_key]
             begin
                 @private_key = File.read(options[:private_key])
             rescue Exception => e
                 raise "Cannot read #{options[:private_key]}"
             end
+
+            @private_key_rsa = OpenSSL::PKey::RSA.new(@private_key)
         end
 
+        # Initialize the public key
         if options[:public_key]
             @public_key = options[:public_key]
         elsif @private_key != nil
             # Init ssh keys using private key. public key is extracted in a
             # format compatible with openssl. The public key does not contain
-            # "---- BEGIN/END RSA PUBLIC KEY ----" and is in a single line
-            key = OpenSSL::PKey::RSA.new(@private_key)
-
-            @public_key = key.public_key.to_pem.split("\n")
-            @public_key = @public_key.reject {|l| l.match(/RSA PUBLIC KEY/) }.join('')
+            # "---- BEGIN/END PUBLIC KEY ----" and is in a single line
+            @public_key = @private_key_rsa.public_key.to_pem.split("\n")
+            @public_key = @public_key.reject {|l| l.match(/PUBLIC KEY/) }.join('')
         end
 
         if @private_key.nil? && @public_key.nil?
             raise "You have to define at least one of the keys"
         end
+
+        @public_key_rsa = OpenSSL::PKey::RSA.new(Base64::decode64(@public_key))
     end
 
     # Creates the login file for ssh authentication at ~/.one/one_ssh.
@@ -89,7 +93,7 @@ class OpenNebula::SshAuth
         file.close
 
         File.chmod(0600,LOGIN_PATH)
-        
+
         secret_crypted
     end
 
@@ -127,13 +131,11 @@ class OpenNebula::SshAuth
     # Encrypts data with the private key of the user and returns
     # base 64 encoded output in a single line
     def encrypt(data)
-        rsa=OpenSSL::PKey::RSA.new(@private_key)
-        Base64::encode64(rsa.private_encrypt(data)).gsub!(/\n/, '').strip
+        Base64::encode64(@private_key_rsa.private_encrypt(data)).gsub!(/\n/, '').strip
     end
 
     # Decrypts base 64 encoded data with pub_key (public key)
     def decrypt(data)
-        rsa=OpenSSL::PKey::RSA.new(Base64::decode64(@public_key))
-        rsa.public_decrypt(Base64::decode64(data))
+        @public_key_rsa.public_decrypt(Base64::decode64(data))
     end
 end

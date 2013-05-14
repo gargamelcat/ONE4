@@ -430,19 +430,6 @@ var groups_tab_non_admin = {
     condition: mustNotBeAdmin
 }
 
-
-SunstoneMonitoringConfig['GROUP'] = {
-    plot: function(monitoring){
-        if (!mustBeAdmin()) return;
-        $('#totalGroups', $dashboard).text(monitoring['totalGroups'])
-    },
-    monitor: {
-        "totalGroups" : {
-            operation: SunstoneMonitoring.ops.totalize
-        }
-    }
-}
-
 Sunstone.addActions(group_actions);
 Sunstone.addMainTab('groups-tab',groups_tab);
 Sunstone.addMainTab('groups_tab_non_admin',groups_tab_non_admin);
@@ -528,11 +515,8 @@ function updateGroupsView(request, group_list){
     });
     updateView(group_list_array,dataTable_groups);
     updateGroupSelect(group_list);
-    //SunstoneMonitoring.monitor('GROUP', group_list)
-    //if (mustBeAdmin())
-    //    updateSystemDashboard("groups",group_list);
 
-
+    // Dashboard info
     $("#total_groups", $dashboard).text(group_list.length);
 
     var form = $("#group_form");
@@ -561,8 +545,14 @@ function updateGroupInfo(request,group){
     Sunstone.updateInfoPanelTab("group_info_panel","group_quotas_tab",quotas_tab);
     Sunstone.popUpInfoPanel("group_info_panel", 'groups-tab');
 
+
+    $("#group_info_panel_refresh", $("#group_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('Group.showinfo', info.ID);
+    })
+
     //preload acct
-    loadAccounting('Group', info.ID, group_acct_graphs);
+    //loadAccounting('Group', info.ID, group_acct_graphs);
 
 }
 
@@ -610,7 +600,7 @@ function setGroupAutorefresh(){
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_groups);
         var  filter = $("#group_search").attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("Group.autorefresh");
         }
     },INTERVAL+someTime());

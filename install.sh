@@ -190,7 +190,8 @@ else
 fi
 
 SHARE_DIRS="$SHARE_LOCATION/examples \
-            $SHARE_LOCATION/tgt"
+            $SHARE_LOCATION/tgt \
+            $SHARE_LOCATION/websockify"
 
 ETC_DIRS="$ETC_LOCATION/im_ec2 \
           $ETC_LOCATION/vmm_ec2 \
@@ -222,7 +223,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/im \
           $VAR_LOCATION/remotes/im/kvm.d \
           $VAR_LOCATION/remotes/im/xen.d \
-	  $VAR_LOCATION/remotes/im/lxc.d \
+          $VAR_LOCATION/remotes/im/lxc.d \
           $VAR_LOCATION/remotes/im/vmware.d \
           $VAR_LOCATION/remotes/im/ganglia.d \
           $VAR_LOCATION/remotes/vmm \
@@ -285,16 +286,21 @@ SUNSTONE_DIRS="$SUNSTONE_LOCATION/routes \
                $SUNSTONE_LOCATION/public/locale/fa_IR \
                $SUNSTONE_LOCATION/public/locale/fr_FR \
                $SUNSTONE_LOCATION/public/locale/it_IT \
+               $SUNSTONE_LOCATION/public/locale/nl_NL \
+               $SUNSTONE_LOCATION/public/locale/pl \
+               $SUNSTONE_LOCATION/public/locale/pt_BR \
                $SUNSTONE_LOCATION/public/locale/pt_PT \
                $SUNSTONE_LOCATION/public/locale/ru_RU \
                $SUNSTONE_LOCATION/public/locale/sk_SK \
                $SUNSTONE_LOCATION/public/locale/zh_TW \
-               $SUNSTONE_LOCATION/public/locale/pt_BR \
+               $SUNSTONE_LOCATION/public/locale/zh_CN \
                $SUNSTONE_LOCATION/public/vendor \
                $SUNSTONE_LOCATION/public/vendor/crypto-js \
                $SUNSTONE_LOCATION/public/vendor/explorercanvas \
                $SUNSTONE_LOCATION/public/vendor/flot \
                $SUNSTONE_LOCATION/public/vendor/fileuploader \
+               $SUNSTONE_LOCATION/public/vendor/noVNC \
+               $SUNSTONE_LOCATION/public/vendor/noVNC/web-socket-js \
                $SUNSTONE_LOCATION/public/vendor/4.0 \
                $SUNSTONE_LOCATION/public/vendor/4.0/datatables \
                $SUNSTONE_LOCATION/public/vendor/4.0/foundation_datatables \
@@ -392,7 +398,7 @@ INSTALL_FILES=(
     MADS_LIB_FILES:$LIB_LOCATION/mads
     IM_PROBES_FILES:$VAR_LOCATION/remotes/im
     IM_PROBES_KVM_FILES:$VAR_LOCATION/remotes/im/kvm.d
-    IM_PROBES_XEN_FILES:$VAR_LOCATION/remotes/im/xen.d 
+    IM_PROBES_XEN_FILES:$VAR_LOCATION/remotes/im/xen.d
     IM_PROBES_LXC_FILES:$VAR_LOCATION/remotes/im/lxc.d
     IM_PROBES_VMWARE_FILES:$VAR_LOCATION/remotes/im/vmware.d
     IM_PROBES_GANGLIA_FILES:$VAR_LOCATION/remotes/im/ganglia.d
@@ -404,10 +410,10 @@ INSTALL_FILES=(
     AUTH_DUMMY_FILES:$VAR_LOCATION/remotes/auth/dummy
     AUTH_PLAIN_FILES:$VAR_LOCATION/remotes/auth/plain
     VMM_EXEC_KVM_SCRIPTS:$VAR_LOCATION/remotes/vmm/kvm
-    VMM_EXEC_LXC_SCRIPTS:$VAR_LOCATION/remotes/vmm/lxc
     VMM_EXEC_XEN3_SCRIPTS:$VAR_LOCATION/remotes/vmm/xen3
     VMM_EXEC_XEN4_SCRIPTS:$VAR_LOCATION/remotes/vmm/xen4
     VMM_EXEC_VMWARE_SCRIPTS:$VAR_LOCATION/remotes/vmm/vmware
+    VMM_EXEC_LXC_SCRIPTS:$VAR_LOCATION/remotes/vmm/lxc
     TM_FILES:$VAR_LOCATION/remotes/tm
     TM_SHARED_FILES:$VAR_LOCATION/remotes/tm/shared
     TM_QCOW2_FILES:$VAR_LOCATION/remotes/tm/qcow2
@@ -435,7 +441,7 @@ INSTALL_FILES=(
     NETWORK_VMWARE_FILES:$VAR_LOCATION/remotes/vnm/vmware
     EXAMPLE_SHARE_FILES:$SHARE_LOCATION/examples
     TGT_SHARE_FILES:$SHARE_LOCATION/tgt
-    INSTALL_NOVNC_SHARE_FILE:$SHARE_LOCATION
+    WEBSOCKIFY_SHARE_FILES:$SHARE_LOCATION/websockify
     INSTALL_GEMS_SHARE_FILE:$SHARE_LOCATION
     HOOK_FT_FILES:$VAR_LOCATION/remotes/hooks/ft
     COMMON_CLOUD_LIB_FILES:$LIB_LOCATION/ruby/cloud
@@ -494,6 +500,8 @@ INSTALL_SUNSTONE_FILES=(
     SUNSTONE_PUBLIC_VENDOR_EXPLORERCANVAS:$SUNSTONE_LOCATION/public/vendor/explorercanvas
     SUNSTONE_PUBLIC_VENDOR_FLOT:$SUNSTONE_LOCATION/public/vendor/flot
     SUNSTONE_PUBLIC_VENDOR_FILEUPLOADER:$SUNSTONE_LOCATION/public/vendor/fileuploader
+    SUNSTONE_PUBLIC_VENDOR_NOVNC:$SUNSTONE_LOCATION/public/vendor/noVNC
+    SUNSTONE_PUBLIC_VENDOR_NOVNC_WEBSOCKET:$SUNSTONE_LOCATION/public/vendor/noVNC/web-socket-js
     SUNSTONE_PUBLIC_NEW_VENDOR_DATATABLES:$SUNSTONE_LOCATION/public/vendor/4.0/datatables
     SUNSTONE_PUBLIC_NEW_VENDOR_FOUNDATION_DATATABLES:$SUNSTONE_LOCATION/public/vendor/4.0/foundation_datatables
     SUNSTONE_PUBLIC_NEW_VENDOR_JGROWL:$SUNSTONE_LOCATION/public/vendor/4.0/jgrowl
@@ -518,11 +526,14 @@ INSTALL_SUNSTONE_FILES=(
     SUNSTONE_PUBLIC_LOCALE_FA_IR:$SUNSTONE_LOCATION/public/locale/fa_IR
     SUNSTONE_PUBLIC_LOCALE_FR_FR:$SUNSTONE_LOCATION/public/locale/fr_FR
     SUNSTONE_PUBLIC_LOCALE_IT_IT:$SUNSTONE_LOCATION/public/locale/it_IT
+    SUNSTONE_PUBLIC_LOCALE_NL_NL:$SUNSTONE_LOCATION/public/locale/nl_NL
+    SUNSTONE_PUBLIC_LOCALE_PL:$SUNSTONE_LOCATION/public/locale/pl
     SUNSTONE_PUBLIC_LOCALE_PT_PT:$SUNSTONE_LOCATION/public/locale/pt_PT
+    SUNSTONE_PUBLIC_LOCALE_PT_BR:$SUNSTONE_LOCATION/public/locale/pt_BR
     SUNSTONE_PUBLIC_LOCALE_RU_RU:$SUNSTONE_LOCATION/public/locale/ru_RU
     SUNSTONE_PUBLIC_LOCALE_SK_SK:$SUNSTONE_LOCATION/public/locale/sk_SK
+    SUNSTONE_PUBLIC_LOCALE_ZH_CN:$SUNSTONE_LOCATION/public/locale/zh_CN
     SUNSTONE_PUBLIC_LOCALE_ZH_TW:$SUNSTONE_LOCATION/public/locale/zh_TW
-    SUNSTONE_PUBLIC_LOCALE_PT_BR:$SUNSTONE_LOCATION/public/locale/pt_BR
 )
 
 INSTALL_SUNSTONE_ETC_FILES=(
@@ -794,7 +805,7 @@ IM_PROBES_KVM_FILES="src/im_mad/remotes/kvm.d/kvm.rb \
                      src/im_mad/remotes/kvm.d/cpu.sh \
                      src/im_mad/remotes/kvm.d/poll.sh \
                      src/im_mad/remotes/kvm.d/name.sh"
-
+                     
 IM_PROBES_LXC_FILES="src/im_mad/remotes/lxc.d/lxc.rb \
                      src/im_mad/remotes/lxc.d/architecture.sh \
                      src/im_mad/remotes/lxc.d/cpu.sh \
@@ -1055,6 +1066,7 @@ ONEDB_MIGRATOR_FILES="src/onedb/2.0_to_2.9.80.rb \
                       src/onedb/3.8.3_to_3.8.4.rb \
                       src/onedb/3.8.4_to_3.9.80.rb \
                       src/onedb/3.9.80_to_3.9.90.rb \
+                      src/onedb/3.9.90_to_4.0.0.rb \
                       src/onedb/fsck.rb \
                       src/onedb/onedb.rb \
                       src/onedb/onedb_backend.rb"
@@ -1084,7 +1096,6 @@ VMM_EXEC_ETC_FILES="src/vmm_mad/exec/vmm_execrc \
                   src/vmm_mad/exec/vmm_exec_xen3.conf \
                   src/vmm_mad/exec/vmm_exec_xen4.conf \
                   src/vmm_mad/exec/vmm_exec_vmware.conf"
-
 
 #-------------------------------------------------------------------------------
 # Information drivers config. files, to be installed under $ETC_LOCATION
@@ -1123,6 +1134,14 @@ EXAMPLE_SHARE_FILES="share/examples/vm.template \
 TGT_SHARE_FILES="share/scripts/tgt/tgt-setup-lun-one"
 
 #-------------------------------------------------------------------------------
+# Files required to interact with the websockify server
+#-------------------------------------------------------------------------------
+
+WEBSOCKIFY_SHARE_FILES="share/websockify/websocketproxy.py \
+                        share/websockify/websocket.py \
+                        share/websockify/websockify"
+
+#-------------------------------------------------------------------------------
 # HOOK scripts, to be installed under $VAR_LOCATION/remotes/hooks
 #-------------------------------------------------------------------------------
 
@@ -1132,7 +1151,6 @@ HOOK_FT_FILES="share/hooks/host_error.rb"
 # Installation scripts, to be installed under $SHARE_LOCATION
 #-------------------------------------------------------------------------------
 
-INSTALL_NOVNC_SHARE_FILE="share/install_novnc.sh"
 INSTALL_GEMS_SHARE_FILE="share/install_gems/install_gems"
 
 #-------------------------------------------------------------------------------
@@ -1422,7 +1440,6 @@ SUNSTONE_PUBLIC_JS_FILES="src/sunstone/public/js/layout.js \
                         src/sunstone/public/js/sunstone.js \
                         src/sunstone/public/js/sunstone-util.js \
                         src/sunstone/public/js/opennebula.js \
-                        src/sunstone/public/js/monitoring.js \
                         src/sunstone/public/js/locale.js"
 
 SUNSTONE_PUBLIC_JS_PLUGINS_FILES="\
@@ -1471,6 +1488,33 @@ src/sunstone/public/vendor/explorercanvas/LICENSE.txt"
 SUNSTONE_PUBLIC_VENDOR_FILEUPLOADER="\
 src/sunstone/public/vendor/fileuploader/NOTICE \
 src/sunstone/public/vendor/fileuploader/fileuploader.js"
+
+SUNSTONE_PUBLIC_VENDOR_NOVNC="\
+src/sunstone/public/vendor/noVNC/LICENSE.txt \
+src/sunstone/public/vendor/noVNC/black.css \
+src/sunstone/public/vendor/noVNC/playback.js \
+src/sunstone/public/vendor/noVNC/websock.js \
+src/sunstone/public/vendor/noVNC/util.js \
+src/sunstone/public/vendor/noVNC/des.js \
+src/sunstone/public/vendor/noVNC/jsunzip.js \
+src/sunstone/public/vendor/noVNC/Orbitron700.ttf \
+src/sunstone/public/vendor/noVNC/display.js \
+src/sunstone/public/vendor/noVNC/input.js \
+src/sunstone/public/vendor/noVNC/rfb.js \
+src/sunstone/public/vendor/noVNC/base64.js \
+src/sunstone/public/vendor/noVNC/Orbitron700.woff \
+src/sunstone/public/vendor/noVNC/logo.js \
+src/sunstone/public/vendor/noVNC/blue.css \
+src/sunstone/public/vendor/noVNC/ui.js \
+src/sunstone/public/vendor/noVNC/vnc.js \
+src/sunstone/public/vendor/noVNC/base.css \
+src/sunstone/public/vendor/noVNC/webutil.js"
+
+SUNSTONE_PUBLIC_VENDOR_NOVNC_WEBSOCKET="\
+src/sunstone/public/vendor/noVNC/web-socket-js/web_socket.js \
+src/sunstone/public/vendor/noVNC/web-socket-js/README.txt \
+src/sunstone/public/vendor/noVNC/web-socket-js/swfobject.js \
+src/sunstone/public/vendor/noVNC/web-socket-js/WebSocketMain.swf"
 
 SUNSTONE_PUBLIC_VENDOR_XML2JSON="\
 src/sunstone/public/vendor/xml2json/NOTICE \
@@ -1611,6 +1655,14 @@ SUNSTONE_PUBLIC_LOCALE_IT_IT="\
 src/sunstone/locale/languages/it_IT.js \
 src/sunstone/locale/languages/it_datatable.txt"
 
+SUNSTONE_PUBLIC_LOCALE_NL_NL="\
+src/sunstone/locale/languages/nl_NL.js \
+src/sunstone/locale/languages/nl_datatable.txt"
+
+SUNSTONE_PUBLIC_LOCALE_PL="\
+src/sunstone/locale/languages/pl.js \
+src/sunstone/locale/languages/pl_datatable.txt"
+
 SUNSTONE_PUBLIC_LOCALE_PT_PT="\
 src/sunstone/locale/languages/pt_PT.js \
 src/sunstone/locale/languages/pt_datatable.txt"
@@ -1626,6 +1678,10 @@ src/sunstone/locale/languages/ru_datatable.txt"
 SUNSTONE_PUBLIC_LOCALE_SK_SK="\
 src/sunstone/locale/languages/sk_SK.js \
 src/sunstone/locale/languages/sk_datatable.txt"
+
+SUNSTONE_PUBLIC_LOCALE_ZH_CN="\
+src/sunstone/locale/languages/zh_CN.js \
+src/sunstone/locale/languages/zh_datatable.txt"
 
 SUNSTONE_PUBLIC_LOCALE_ZH_TW="\
 src/sunstone/locale/languages/zh_TW.js \

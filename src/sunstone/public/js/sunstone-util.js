@@ -218,8 +218,23 @@ function updateView(item_list,dataTable){
     });
 
     if (dataTable) {
+        var dTable_settings = dataTable.fnSettings();
+        var prev_start = dTable_settings._iDisplayStart;
+
         dataTable.fnClearTable();
         dataTable.fnAddData(item_list);
+
+        var new_start = prev_start;
+
+        if(new_start > item_list.length - 1) {
+            if(item_list.length > 0)
+                new_start = item_list.length - 1;
+            else
+                new_start = 0;
+        }
+
+        dTable_settings._iDisplayStart = new_start;
+
         dataTable.fnDraw(false);
     };
 
@@ -1699,6 +1714,10 @@ function loadAccounting(resource, id, graphs, options){
     };
 }
 
+var unscape = function(convert){
+    return $("<span />", { html: convert }).text();
+};
+
 // Convert from hash to string
 function convert_template_to_string(template_json,unshown_values)
 {
@@ -1754,7 +1773,7 @@ function convert_template_to_string(template_json,unshown_values)
         }
     })
 
-    return template_str;
+    return unscape(template_str);
 }
 
 // Create the extended template table (with listeners)

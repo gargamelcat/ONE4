@@ -44,6 +44,11 @@ var images_tab_content = '\
   </div>\
 </div>\
 </div>\
+  <div class="">\
+    <div class="twelve columns">\
+  <div id="upload_progress_bars"></div>\
+</div>\
+</div>\
   <div class="row">\
     <div class="twelve columns">\
 <table id="datatable_images" class="datatable twelve">\
@@ -97,7 +102,7 @@ var create_image_tmpl =
                           <label class="right inline" for="img_desc">'+tr("Description")+':</label>\
                         </div>\
                         <div class="seven columns">\
-                          <textarea name="img_desc" id="img_desc" style="height:4em"></textarea>\
+                          <textarea name="img_desc" id="img_desc" rows="4"></textarea>\
                         </div>\
                         <div class="one columns">\
                           <div class="tip">'+tr("Human readable description of the image for other users.")+'</div>\
@@ -122,6 +127,18 @@ var create_image_tmpl =
                       </div>\
                       <div class="row">\
                         <div class="four columns">\
+                          <label class="right inline" for="img_datastore">'+tr("Datastore")+':</label>\
+                        </div>\
+                        <div class="seven columns">\
+                         <select id="img_datastore" name="img_datastore">\
+                         </select>\
+                        </div>\
+                        <div class="one columns">\
+                          <div class="tip">'+tr("Select the datastore for this image")+'</div>\
+                        </div>\
+                      </div>\
+                      <div class="row">\
+                        <div class="four columns">\
                           <label class="right inline" for="img_persistent">'+tr("Persistent")+':</label>\
                         </div>\
                         <div class="seven columns">\
@@ -136,13 +153,12 @@ var create_image_tmpl =
                  <div class="row">\
                  <fieldset>\
                  <legend>'+tr("Image location")+':</legend>\
-                 <div class="row" id="src_path_select">\
-                        <div class="seven columns centered">\
+                 <div class="row centered" id="src_path_select" style="text-align:center">\
                          <input type="radio" name="src_path" id="path_img" value="path">'+ tr("Provide a path")+'&emsp;</input> \
                          <input type="radio" name="src_path" id="upload_img" value="upload"> '+tr("Upload")+'</input> &emsp;\
                          <input type="radio" name="src_path" id="datablock_img" value="datablock" disabled> '+tr("Empty datablock")+'</input> &emsp;\
-                        </div>\
                  </div>\
+                 <hr>\
                  <div class="img_param row">\
                    <div class="eight columns centered">\
                     <div class="two columns">\
@@ -155,6 +171,11 @@ var create_image_tmpl =
                       <div class="tip">'+tr("Path to the original file that will be copied to the image repository. If not specified for a DATABLOCK type image, an empty image will be created.")+'</div>\
                     </div>\
                  </div>\
+                 </div>\
+                 <div class="row">\
+                  <div class="columns eight centered">\
+                    <div id="file-uploader"></div>\
+                  </div>\
                  </div>\
                  <div class="img_size">\
                    <div class="six columns">\
@@ -184,14 +205,6 @@ var create_image_tmpl =
                     </div>\
                     </div>\
                   </div>\
-                 <div class="img_param" id="upload_div">\
-                 <div class="row centered">\
-                 <div class="columns eight">\
-                   <div id="file-uploader">\
-                   </div><div class="clear" />\
-                 </div>\
-                 </div>\
-                 </div>\
                  </fieldset>\
                  </div>\
                 <div class="show_hide" id="advanced_image_create">\
@@ -201,10 +214,10 @@ var create_image_tmpl =
                   <div class="row">\
                     <div class="six columns">\
                       <div class="row">\
-                        <div class="four columns">\
+                        <div class="six columns">\
                           <label class="right inline" for="img_dev_prefix">'+tr("Device prefix")+':</label>\
                         </div>\
-                        <div class="seven columns">\
+                        <div class="five columns">\
                           <input type="text" name="img_dev_prefix" id="img_dev_prefix" />\
                         </div>\
                         <div class="one columns">\
@@ -212,10 +225,10 @@ var create_image_tmpl =
                         </div>\
                       </div>\
                       <div class="row">\
-                        <div class="four columns">\
+                        <div class="six columns">\
                           <label class="right inline" for="img_driver">'+tr("Driver")+':</label>\
                         </div>\
-                        <div class="seven columns">\
+                        <div class="five columns">\
                           <input type="text" name="img_driver" id="img_driver" />\
                         </div>\
                         <div class="one columns">\
@@ -225,26 +238,14 @@ var create_image_tmpl =
                     </div>\
                     <div class="six columns">\
                       <div class="row">\
-                        <div class="four columns">\
+                        <div class="six columns">\
                           <label class="right inline" for="img_target">'+tr("Target")+':</label>\
                         </div>\
-                        <div class="seven columns">\
+                        <div class="five columns">\
                           <input type="text" name="img_target" id="img_target" />\
                         </div>\
                         <div class="one columns">\
                           <div class="tip">'+tr("Target on which the image will be mounted at. For example: hda, sdb...")+'</div>\
-                        </div>\
-                      </div>\
-                      <div class="row">\
-                        <div class="four columns">\
-                          <label class="right inline" for="img_datastore">'+tr("Datastore")+':</label>\
-                        </div>\
-                        <div class="seven columns">\
-                         <select id="img_datastore" name="img_datastore">\
-                         </select>\
-                        </div>\
-                        <div class="one columns">\
-                          <div class="tip">'+tr("Select the datastore for this image")+'</div>\
                         </div>\
                       </div>\
                     </div>\
@@ -253,8 +254,8 @@ var create_image_tmpl =
           <div class="reveal-footer">\
             <hr>\
             <div class="form_buttons">\
-              <button class="button success radius right" id="create_image_submit" value="image/create">'+tr("Create")+'</button>\
-              <button class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
+              <button class="button success radius right" id="create_image_submit" type="button" value="image/create">'+tr("Create")+'</button>\
+              <button id="wizard_image_reset_button"  class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
               <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
             </div>\
           </div>\
@@ -273,7 +274,7 @@ var create_image_tmpl =
                  <hr>\
                <div class="form_buttons">\
                  <button class="button success radius right" id="create_image_submit_manual" value="image/create">'+tr("Create")+'</button>\
-                 <button class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
+                 <button  id="advanced_image_reset_button" class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
                  <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
                </div>\
           </div>\
@@ -410,7 +411,7 @@ var image_actions = {
         call: OpenNebula.Image.chown,
         callback:  function (req) {
             Sunstone.runAction("Image.show",req.request.data[0][0]);
-            Sunstone.runAction('Image.showinfo',request.request.data[0]);
+            Sunstone.runAction('Image.showinfo',req.request.data[0]);
         },
         elements: imageElements,
         error: onError,
@@ -422,7 +423,7 @@ var image_actions = {
         call: OpenNebula.Image.chgrp,
         callback: function (req) {
             Sunstone.runAction("Image.show",req.request.data[0][0]);
-            Sunstone.runAction('Image.showinfo',request.request.data[0]);
+            Sunstone.runAction('Image.showinfo',req.request.data[0]);
         },
         elements: imageElements,
         error: onError,
@@ -628,7 +629,6 @@ function updateImagesView(request, images_list){
     });
 
     updateView(image_list_array,dataTable_images);
-    updateVResDashboard("images",images_list);
 
     var size = humanize_size_from_mb(size_images)
 
@@ -798,6 +798,11 @@ function updateImageInfo(request,img){
 
     setPermissionsTable(img_info,'');
 
+    $("#image_info_panel_refresh", $("#image_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('Image.showinfo', img_info.ID);
+    })
+
 }
 
 function enable_all_datastores()
@@ -810,11 +815,13 @@ function enable_all_datastores()
 
 // Prepare the image creation dialog
 function setupCreateImageDialog(){
-    dialogs_context.append('<div title="'+tr("Create Image")+'" id="create_image_dialog"></div>');
+    dialogs_context.append('<div id="create_image_dialog"></div>');
     $create_image_dialog =  $('#create_image_dialog',dialogs_context);
 
     var dialog = $create_image_dialog;
     dialog.html(create_image_tmpl);
+
+    setupTips($create_image_dialog);
 
     var height = Math.floor($(window).height()*0.8); //set height to a percentage of the window
 
@@ -936,8 +943,8 @@ function setupCreateImageDialog(){
                 file: fileName
             });
             //we pop up an upload progress dialog
-            var pos_top = $(window).height() - 120;
-            var pos_left = 220;
+            //var pos_top = $(window).height() - 120;
+            //var pos_left = 220;
             //var pb_dialog = $('<div id="pb_dialog" title="'+
             //                  tr("Uploading...")+'">'+
             //                  '<div id="upload-progress"></div>'+
@@ -951,16 +958,28 @@ function setupCreateImageDialog(){
             //                      position: [pos_left, pos_top]
             //                  });
 
-            var pb_dialog = $('<div id="pb_dialog" title="'+
-                              tr("Uploading...")+'">'+
-                              '<div id="upload-progress"></div>'+
-                              '</div>').addClass("reveal-modal");
+            //var pb_dialog = $('<div id="pb_dialog" title="'+
+            //                  tr("Uploading...")+'">'+
+            //                  '<div id="upload-progress"></div>'+
+            //                  '</div>').addClass("reveal-modal");
 
             //$('#upload-progress',pb_dialog).progressbar({value:0});
+            $('#upload_progress_bars').append('<div id="'+id+'progressBar" class="row" style="margin-bottom:10px">\
+              <div class="two columns dataTables_info">\
+                '+tr("Uploading...")+'\
+              </div>\
+              <div class="ten columns">\
+                <div id="upload_progress_container" class="progress nine radius" style="height:25px !important">\
+                  <span class="meter" style="width:0%"></span>\
+                </div>\
+                <div class="progress-text" style="margin-left:15px">'+id+' '+fileName+'</div>\
+              </div>\
+            </div>');
         },
         onProgress: function(id, fileName, loaded, total){
             //update upload dialog with current progress
             //$('div#pb_dialog #upload-progress').progressbar("option","value",Math.floor(loaded*100/total));
+            $('span.meter', $('#'+id+'progressBar')).css('width', Math.floor(loaded*100/total)+'%')
         },
         onComplete: function(id, fileName, responseJSON){
 
@@ -968,15 +987,13 @@ function setupCreateImageDialog(){
                 uploader._handler._xhrs[id].status == 500) {
 
                 onError({}, JSON.parse(uploader._handler._xhrs[id].response) )
+                $('#'+id+'progressBar').remove();
             } else {
                 notifyMessage("Image uploaded correctly");
+                $('#'+id+'progressBar').remove();
                 Sunstone.runAction("Image.list");
             }
 
-            //Inform complete upload, destroy upload dialog, refresh img list
-
-            //$('div#pb_dialog').dialog('destroy');
-            $('div#pb_dialog').trigger("reveal:close")
             return false;
         },
         onCancel: function(id, fileName){
@@ -1102,6 +1119,7 @@ function setupCreateImageDialog(){
         };
 
         $create_image_dialog.trigger("reveal:close")
+
         return false;
     });
 
@@ -1123,6 +1141,23 @@ function setupCreateImageDialog(){
         Sunstone.runAction("Image.create",img_obj);
         $create_image_dialog.trigger("reveal:close")
         return false;
+    });
+
+    $('#wizard_image_reset_button').click(function(){
+        $create_image_dialog.trigger('reveal:close');
+        $create_image_dialog.remove();
+        setupCreateImageDialog();
+
+        popUpCreateImageDialog();
+    });
+
+    $('#advanced_image_reset_button').click(function(){
+        $create_image_dialog.trigger('reveal:close');
+        $create_image_dialog.remove();
+        setupCreateImageDialog();
+
+        popUpCreateImageDialog();
+        $("a[href='#img_manual']").click();
     });
 }
 
@@ -1156,7 +1191,7 @@ function setImageAutorefresh() {
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_images);
         var filter = $("#image_search").attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("Image.autorefresh");
         }
     },INTERVAL+someTime());
@@ -1169,7 +1204,7 @@ function is_persistent_image(id){
 
 function setupImageCloneDialog(){
     //Append to DOM
-    dialogs_context.append('<div id="image_clone_dialog" title="'+tr("Clone an image")+'"></div>');
+    dialogs_context.append('<div id="image_clone_dialog"></div>');
     var dialog = $('#image_clone_dialog',dialogs_context);
 
     //Put HTML in place
@@ -1282,7 +1317,6 @@ $(document).ready(function(){
     Sunstone.runAction("Image.list");
 
     setupCreateImageDialog();
-    setupTips($create_image_dialog);
     setupImageCloneDialog();
     setImageAutorefresh();
 

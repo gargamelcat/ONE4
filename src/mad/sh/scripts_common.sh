@@ -416,6 +416,11 @@ function is_iscsi {
     fi
 }
 
+# Checks wether $IMAGE_TYPE is CDROM 
+function is_cdrom {
+    [ "$IMAGE_TYPE" = "1" ]
+}
+
 function iqn_get_lv_name {
     IQN="$1"
     TARGET=`echo "$IQN"|$CUT -d: -f2`
@@ -464,8 +469,8 @@ function vmfs_create_remote_path {
     DS_ID=$1
     # Create DST in DST_HOST
     if [ "$USE_SSH" == "yes" ]; then
-        exec_and_log  "ssh_make_path $DST_HOST $DST" \
-                      "Cannot create $DST in $DST_HOST"
+        exec_and_log  "ssh_make_path $DST_HOST /vmfs/volumes/$DS_ID/$DST_FOLDER" \
+                      "Cannot create /vmfs/volumes/$DS_ID/$DST_FOLDER in $DST_HOST"
     else
         exec_and_log "vifs $VI_PARAMS --mkdir [$DS_ID]$DST_FOLDER" \
                      "Cannot create [$DS_ID]$DST_FOLDER in $DST_HOST"
@@ -492,4 +497,10 @@ function vmfs_create_double_path {
     vifs $VI_PARAMS --force --mkdir [$DS_ID]$FIRST_FOLDER &> /dev/null
     vifs $VI_PARAMS --force --mkdir [$DS_ID]$FIRST_FOLDER/$SECOND_FOLDER &> /dev/null
 
+}
+
+function vmfs_create_simple_path {
+    DS_ID=$1
+    FIRST_FOLDER=$2
+    vifs $VI_PARAMS --force --mkdir [$DS_ID]$FIRST_FOLDER &> /dev/null
 }

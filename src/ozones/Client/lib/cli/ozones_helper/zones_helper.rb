@@ -1,12 +1,12 @@
-require 'cli/ozones_helper'
-require 'cli/one_helper/onehost_helper'
-require 'cli/one_helper/onevm_helper'
-require 'cli/one_helper/oneimage_helper'
-require 'cli/one_helper/onevnet_helper'
-require 'cli/one_helper/onetemplate_helper'
-require 'cli/one_helper/oneuser_helper'
-require 'cli/one_helper/onecluster_helper'
-require 'cli/one_helper/onedatastore_helper'
+require 'ozones_helper'
+require 'one_helper/onehost_helper'
+require 'one_helper/onevm_helper'
+require 'one_helper/oneimage_helper'
+require 'one_helper/onevnet_helper'
+require 'one_helper/onetemplate_helper'
+require 'one_helper/oneuser_helper'
+require 'one_helper/onecluster_helper'
+require 'one_helper/onedatastore_helper'
 
 class ZonesHelper < OZonesHelper::OZHelper
     def initialize(kind, user=nil, pass=nil, endpoint_str=nil,
@@ -45,7 +45,6 @@ class ZonesHelper < OZonesHelper::OZHelper
         puts str % ["ZONE PASS ", zone[:ONEPASS].to_s]
         puts str % ["ENDPOINT ",  zone[:ENDPOINT].to_s]
         puts str % ["SUNSENDPOINT ",  zone[:SUNSENDPOINT].to_s]
-        puts str % ["SELFENDPOINT ",  zone[:SELFENDPOINT].to_s]
         puts str % ["# VDCS ",    zone[:VDCS].size.to_s]
         puts
 

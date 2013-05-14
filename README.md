@@ -1,6 +1,5 @@
-OpenNebula - The OpenSource Toolkit for Cloud Computing
 
-LXC DRIVERS
+OpenNebula - The OpenSource Toolkit for Cloud Computing
 
 ## DESCRIPTION
 

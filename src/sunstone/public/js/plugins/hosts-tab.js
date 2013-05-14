@@ -81,8 +81,8 @@ var create_host_tmpl =
       <small id="create_cluster_header">'+tr("Create Host")+'</small>\
     </h3>\
   </div>\
-  <div class="reveal-body">\
   <form id="create_host_form" action="" class="">\
+  <div class="reveal-body">\
   <div class="row">\
       <div class="four columns">\
           <label class="inline right" for="name">' + tr("Hostname")  + ':</label>\
@@ -178,17 +178,17 @@ var create_host_tmpl =
           <div class="tip"></div>\
       </div>\
     </div>\
-    <div class="reveal-footer">\
-    <hr>\
-    <div class="form_buttons row">\
-        <button class="button success right radius" type="submit" id="create_host_submit" value="OpenNebula.Host.create">' + tr("Create") + '</button>\
-        <button class="button secondary radius" type="reset" value="reset">' + tr("Reset") + '</button>\
-        <button class="close-reveal-modal button secondary radius" action="" type="button" value="close">' + tr("Close") + '</button>\
     </div>\
+    <div class="reveal-footer">\
+      <hr>\
+      <div class="form_buttons row">\
+          <button class="button success right radius" type="submit" id="create_host_submit" value="OpenNebula.Host.create">' + tr("Create") + '</button>\
+          <button id="wizard_host_reset_button" class="button secondary radius" type="reset" value="reset">' + tr("Reset") + '</button>\
+          <button class="close-reveal-modal button secondary radius" action="" type="button" value="close">' + tr("Close") + '</button>\
+      </div>\
     </div>\
     <a class="close-reveal-modal">&#215;</a>\
-</form>\
-    </div>';
+</form>';
 
 var hosts_select="";
 var dataTable_hosts;
@@ -455,182 +455,6 @@ var hosts_tab = {
     showOnTopMenu: false
 };
 
-
-// Configuration object for plots related to hosts in the dashboard
-SunstoneMonitoringConfig['HOST'] = {
-    plot: function(monitoring){
-        // Write the total hosts and discard this value
-        $('#totalHosts', $dashboard).text(monitoring['totalHosts'])
-        delete monitoring['totalHosts']
-
-        //if (!$dashboard.is(':visible')) return;
-
-        //Plot each of the monitored series
-        for (plotID in monitoring){
-            var container = $('div#'+plotID,$dashboard);
-            if (!container.length) continue;
-            SunstoneMonitoring.plot("HOST",
-                                    plotID,
-                                    container,
-                                    monitoring[plotID]); //serie
-        };
-    },
-    monitor : {
-        // Config to extract data to make state pie
-        "statePie" : {
-            partitionPath: "STATE", //we partition hosts acc. to STATE
-            operation: SunstoneMonitoring.ops.partition,
-            dataType: "pie", //we want to paint a pie
-            colorize: function(state){
-                switch (state) { //This is how we color each pie sector
-                case '0': return "rgb(239,201,86)" //yellow
-                case '1': return "rgb(175,216,248)" //blue
-                case '2': return "rgb(108,183,108)" //green
-                case '3': return "rgb(203,75,75)" //red
-                case '4': return "rgb(71,71,71)" //gray
-                case '5': return "rgb(160,160,160)" //light gray
-                }
-            },
-            plotOptions : { //jquery.flot plotting options
-                series: { pie: { show: true  } },
-                legend : {
-                    labelFormatter: function(label, series){
-                        return OpenNebula.Helper.resource_state("host_simple",label) +
-                            ' - ' + series.data[0][1] + ' (' +
-                            Math.floor(series.percent) + '%' + ')';
-                    }
-                }
-            }
-        },
-        "cpuPerCluster" : { //cpu used in each cluster
-            path: ["HOST_SHARE","CPU_USAGE"], //totalize cpu
-            partitionPath: "CLUSTER_ID", //in each cluster
-            operation: SunstoneMonitoring.ops.partition,
-            dataType: "bars", //we want to paint vertical bars
-            plotOptions: {
-                series: { bars: {show: true, barWidth: 0.5, align: 'center' }},
-                //customLabels is a custom option, means a ticks array will
-                //be added to this configuration with the labels (cluster
-                //names) when it is ready.
-                xaxis: { show: true, customLabels: true },
-                yaxis: { min: 0 },
-                legend : {
-                    show: false,
-                    noColumns: 2,
-                    labelFormatter: function(label){
-                        if (label == "-1") return "none"
-                        return getClusterName(label)
-                    }
-                }
-            }
-        },
-        "memoryPerCluster" : { //memory used in each cluster. same as above.
-            path: ["HOST_SHARE","MEM_USAGE"],
-            partitionPath: "CLUSTER_ID",
-            operation: SunstoneMonitoring.ops.partition,
-            dataType: "bars",
-            plotOptions: {
-                series: { bars: {show: true, barWidth: 0.5, align: 'center' }},
-                xaxis: { show: true, customLabels: true },
-                yaxis: {
-                    tickFormatter : function(val,axis) {
-                        return humanize_size(val);
-                    },
-                    min: 0
-                },
-                legend : {
-                    show: false,
-                    noColumns: 2,
-                    labelFormatter: function(label){
-                        if (label == "-1") return "none"
-                        return getClusterName(label)
-                    }
-                }
-            }
-        },
-        "globalCpuUsage" : { //pie according to cpu usage.
-            partitionPath: ["HOST_SHARE", "USED_CPU"],
-            dataType: "pie",
-            operation: SunstoneMonitoring.ops.hostCpuUsagePartition,
-            plotOptions: {
-                series: { pie: { show: true  } }
-            }
-        },
-        "totalHosts" : { //count number of hosts
-            operation: SunstoneMonitoring.ops.totalize
-        },
-        "cpuUsageBar" : { //horizontal bar with cpu usage
-            // we want the following values to be totalized in the same bar
-            paths: [
-                ["HOST_SHARE","MAX_CPU"],
-                ["HOST_SHARE","USED_CPU"],
-                ["HOST_SHARE","CPU_USAGE"],
-            ],
-            operation: SunstoneMonitoring.ops.singleBar,
-            plotOptions: {
-                series: { bars: { show: true,
-                                  horizontal: true,
-                                  barWidth: 0.5 }
-                        },
-                yaxis: { show: false },
-                xaxis: { min:0 },
-                legend: {
-                    noColumns: 3,
-                    container: '#cpuUsageBar_legend',
-                    labelFormatter: function(label, series){
-                        if (label[1] == "USED_CPU") {
-                            return tr("Real CPU");
-                        }
-                        else if (label[1] == "CPU_USAGE") {
-                            return tr("Allocated CPU");
-                        }
-                        else if (label[1] == "MAX_CPU") {
-                            return tr("Total CPU");
-                        }
-                    }
-                }
-            }
-        },
-        "memoryUsageBar" : { //same as above
-            paths: [
-                ["HOST_SHARE","MAX_MEM"],
-                ["HOST_SHARE","USED_MEM"],
-                ["HOST_SHARE","MEM_USAGE"],
-            ],
-            operation: SunstoneMonitoring.ops.singleBar,
-            plotOptions: {
-                series: { bars: { show: true,
-                                  horizontal: true,
-                                  barWidth: 0.5 }
-                        },
-                yaxis: { show: false },
-                xaxis: {
-                    tickFormatter : function(val,axis) {
-                        return humanize_size(val);
-                    },
-                    min: 0
-                },
-                legend: {
-                    noColumns: 3,
-                    container: '#memoryUsageBar_legend',
-                    labelFormatter: function(label, series){
-                        if (label[1] == "USED_MEM") {
-                            return tr("Real MEM");
-                        }
-                        else if (label[1] == "MEM_USAGE") {
-                            return tr("Allocated MEM");
-                        }
-                        else if (label[1] == "MAX_MEM") {
-                            return tr("Total MEM");
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
 Sunstone.addActions(host_actions);
 Sunstone.addMainTab('hosts-tab',hosts_tab);
 Sunstone.addInfoPanel("host_info_panel",host_info_panel);
@@ -886,16 +710,6 @@ function updateHostsView (request,host_list){
             host_monitoring_data = {};
         }
     }
-
-    //SunstoneMonitoring.monitor('HOST', host_list)
-//
-    ////if clusters_sel is there, it means the clusters have arrived.
-    ////Otherwise do not attempt to monitor them.
-    //if (typeof(monitorClusters) != 'undefined' && clusters_sel())
-    //    monitorClusters(host_list)
-
-    //dependency with the dashboard plugin
-    //updateInfraDashboard("hosts",host_list);
 }
 
 //Updates the host info panel tab content and pops it up
@@ -1020,6 +834,11 @@ function updateHostInfo(request,host){
 
     Sunstone.popUpInfoPanel("host_info_panel", "hosts-tab");
 
+
+    $("#host_info_panel_refresh", $("#host_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('Host.showinfo', host_info.ID);
+    })
     // TODO: re-use Host.pool_monitor data?
 
     //pop up panel while we retrieve the graphs
@@ -1105,6 +924,14 @@ function setupCreateHostDialog(){
         $create_host_dialog.trigger("reveal:close")
         return false;
     });
+
+    $('#wizard_host_reset_button').click(function(){
+        $create_host_dialog.trigger('reveal:close');
+        $create_host_dialog.remove();
+        setupCreateHostDialog();
+
+        popUpCreateHostDialog();
+    });
 }
 
 //Open creation dialogs
@@ -1119,7 +946,7 @@ function setHostAutorefresh() {
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_hosts);
         var  filter = $("#hosts_search").attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("Host.autorefresh");
         }
     },INTERVAL+someTime());

@@ -37,20 +37,19 @@
     <script src="js/layout.js" type="text/javascript"></script>
     <script src="js/sunstone.js" type="text/javascript"></script>
     <script src="js/sunstone-util.js" type="text/javascript"></script>
-    <script src="js/monitoring.js" type="text/javascript"></script>
-    <% view = $views_config.view(session['user'], session['user_gname'], session['default_view']) %>
+    <% view = $views_config.view(session[:user], session[:user_gname], session[:default_view]) %>
     <script>
 
       var view = JSON.parse('<%= view.to_json %>')
       var available_views = JSON.parse('["<%=
-        $views_config.available_views(session['user'], session['user_gname']).join('","')
+        $views_config.available_views(session[:user], session[:user_gname]).join('","')
       %>"]')
 
       config = {
         'user_config' : {
-            'lang' : '<%= session['lang'] %>',
-            'vnc_wss' : '<%= session['vnc_wss'] %>',
-            'default_view' : '<%= session['default_view'] %>'
+            'lang' : '<%= session[:lang] %>',
+            'vnc_wss' : '<%= session[:vnc_wss] %>',
+            'default_view' : '<%= session[:default_view] %>'
         },
         'system_config' : {
             'marketplace_url' : '<%= $conf[:marketplace_url] %>',
@@ -85,10 +84,15 @@
           <ul class="tabs vertical" id="navigation"></ul>
         </div>
       </div>
+
+        <div id="footer" style="overflow:visible;text-align:center;padding:8px;font-size:12px">
+            <a href="http://opennebula.org" target="_blank">OpenNebula 4.0.0</a> by <a href="http://c12g.com" target="_blank">C12G Labs</a>.
+        </div>
     </div>
     <div id="dialogs"></div>
     <div id="plots"></div>
     <div id="info_panels"></div>
+
     <script src="vendor/4.0/foundation/jquery.foundation.reveal.js" type="text/javascript"></script>
     <script src="vendor/4.0/foundation/jquery.foundation.orbit.js" type="text/javascript"></script>
     <script src="vendor/4.0/foundation/jquery.foundation.forms.js" type="text/javascript"></script>

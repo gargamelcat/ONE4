@@ -120,7 +120,22 @@ var Sunstone = {
     //Generates and returns the HTML div element for an info panel, with
     //Jquery tabs.
     "getInfoPanelHTML" : function(panel_name,selected_tab){
-        var dl_tabs = $('<br><div id="'+panel_name+'" class="row"><div class="twelve columns"><dl class="tabs"></dl></div><ul class="tabs-content"></ul></div>');
+        var active_tab = $("dd.active a", $("#"+panel_name));
+        if (active_tab) {
+            var active_tab_href = active_tab.attr('href');
+        }
+
+        var dl_tabs = $('<br><div id="'+panel_name+'" class="row">\
+            <div class="twelve columns">\
+                <dl class="tabs">\
+                    <div id="refresh_div">\
+                        <button type="button" style="float:left; margin-right:5px" class="button secondary tiny radius" id="'+panel_name+'_refresh"><span class="icon-refresh"></span></button>\
+                    </div>\
+                </dl>\
+            </div>\
+            <ul class="tabs-content"></ul>\
+        </div>');
+
         var tabs = SunstoneCfg["info_panels"][panel_name];
         var tab=null;
         var active=false;
@@ -135,10 +150,18 @@ var Sunstone = {
             //$('ul', dl_tabs).append('<div id="'+panel_tab_name+'"><li id="'+panel_tab_name+'Tab">'+tab.content+'</li></div>');
             var li = $('<li id="'+panel_tab_name+'Tab">'+tab.content+'</li>').appendTo($('ul', dl_tabs));
 
-            if (!active) {
-                dd.addClass('active');
-                li.addClass('active');
-                active = true;
+            if (active_tab_href) {
+                if (active_tab_href == "#"+panel_tab_name) {
+                    dd.addClass('active');
+                    li.addClass('active');
+                }
+            }
+            else {
+                if (!active) {
+                    dd.addClass('active');
+                    li.addClass('active');
+                    active = true;
+                }
             }
         }
         if (selected_tab){
@@ -636,12 +659,6 @@ function insertButtonsInTab(tab_name){
                   '</ul>'+
                   '<ul class="button-group right">'+
                     '<li>'+
-                        "<div id='main_buttons'>"+
-                            "<ul class='button-group radius'>"+
-                            "</ul>"+
-                        "</div>"+
-                    '</li>'+
-                    '<li>'+
                         "<div id='more_buttons'>"+
                             "<div href='#' class='top_button small button secondary dropdown radius'>More "+
                                 "<ul>"+
@@ -649,6 +666,10 @@ function insertButtonsInTab(tab_name){
                             "</div>"+
                         "</div>"+
                     '</li>'+
+                  '</ul>'+
+                  '<ul class="button-group right">'+
+                    "<div id='main_buttons'>"+
+                    "</div>"+
                   '</ul>'+
                   '<ul class="button-group right">'+
                     '<li>'+
@@ -715,10 +736,10 @@ function insertButtonsInTab(tab_name){
                 button_code = '<button class="'+str_class.join(' ')+'" href="'+button_name+'">'+text+'</button>';
                 break;
             case "main":
-                context = $("#main_buttons ul", buttons_row);
+                context = $("#main_buttons", buttons_row);
                 text = button.text;
                 str_class.push("secondary", "button", "small", "radius");
-                button_code = '<li><button type"button" class="'+str_class.join(' ')+'" href="'+button_name+'">'+text+'</button></li>';
+                button_code = '<li><button class="'+str_class.join(' ')+'" href="'+button_name+'">'+text+'</button></li>';
                 break;
             case "vmsplay_buttons":
                 context = $("#vmsplay_buttons", buttons_row);

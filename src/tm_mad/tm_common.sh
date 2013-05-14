@@ -33,9 +33,6 @@ ONE_SH=$ONE_LIB/sh
 
 . $ONE_SH/scripts_common.sh
 
-# Set umask
-umask 0007
-
 # ------------------------------------------------------------------------------
 # Function to get hosts and paths from arguments
 # ------------------------------------------------------------------------------
@@ -100,4 +97,23 @@ function get_tm_use_ssh {
     TM_USE_SSH="${XPATH_ELEMENTS[0]:-$TM_USE_SSH}"
 
     echo $TM_USE_SSH
+}
+
+#Return DISK_TYPE
+function disk_type
+{
+    # Let's check if it is a CDROM
+    DISK_ID=$(echo "$DST_PATH" | $AWK -F. '{print $NF}')
+    XPATH="${ONE_LOCAL_VAR}/remotes/datastore/xpath.rb --stdin"
+
+    unset i XPATH_ELEMENTS
+
+    while IFS= read -r -d '' element; do
+        XPATH_ELEMENTS[i++]="$element"
+    done < <(onevm show -x $VMID| $XPATH \
+                        /VM/TEMPLATE/DISK[DISK_ID=$DISK_ID]/TYPE )
+
+    DISK_TYPE="${XPATH_ELEMENTS[0]}"
+
+    echo $DISK_TYPE
 }

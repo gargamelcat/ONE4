@@ -23,11 +23,13 @@ if !ONE_LOCATION
     LOG_LOCATION = "/var/log/one"
     VAR_LOCATION = "/var/lib/one"
     ETC_LOCATION = "/etc/one"
+    SHARE_LOCATION = "/usr/share/one"
     RUBY_LIB_LOCATION = "/usr/lib/one/ruby"
 else
     VAR_LOCATION = ONE_LOCATION + "/var"
     LOG_LOCATION = ONE_LOCATION + "/var"
     ETC_LOCATION = ONE_LOCATION + "/etc"
+    SHARE_LOCATION = ONE_LOCATION + "/share"
     RUBY_LIB_LOCATION = ONE_LOCATION+"/lib/ruby"
 end
 
@@ -187,7 +189,7 @@ helpers do
             if user['TEMPLATE/DEFAULT_VIEW']
                 session[:default_view] = user['TEMPLATE/DEFAULT_VIEW']
             else
-                session[:default_view] = $views_config.available_views(session['user'], session['user_gname']).first
+                session[:default_view] = $views_config.available_views(session[:user], session[:user_gname]).first
             end
 
             #end user options

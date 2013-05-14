@@ -129,13 +129,13 @@ var create_datastore_tmpl =
           <fieldset>\
             <legend>' + tr("Type") + '</legend>\
               <div class="four columns">\
-                <label for="ds_type"><input id="ds_type" type="radio" name="ds_type" value="IMAGE_DS" />' + tr("Images") + '</label>\
+                <label for="image_ds_type"><input id="image_ds_type" type="radio" name="ds_type" value="IMAGE_DS" checked/>' + tr("Images") + '</label>\
               </div>\
               <div class="four columns">\
-                <label for="ds_type"><input id="ds_type" type="radio" name="ds_type" value="SYSTEM_DS" />' + tr("System") + '</label>\
+                <label for="system_ds_type"><input id="system_ds_type" type="radio" name="ds_type" value="SYSTEM_DS" />' + tr("System") + '</label>\
               </div>\
               <div class="four columns">\
-                <label for="ds_type"><input id="ds_type" type="radio" name="ds_type" value="FILE_DS" />' + tr("Files") + '</label>\
+                <label for="file_ds_type"><input id="file_ds_type" type="radio" name="ds_type" value="FILE_DS" />' + tr("Files") + '</label>\
               </div>\
           </fieldset>\
         </div>\
@@ -171,7 +171,12 @@ var create_datastore_tmpl =
                   <option value="lvm">' + tr("LVM") + '</option>\
                   <option value="vmfs">' + tr("VMFS") + '</option>\
                   <option value="ceph">' + tr("Ceph") + '</option>\
+                  <option value="custom">' + tr("Custom") + '</option>\
                 </select>\
+                <div>\
+                  <label>' + tr("Custom DS_MAD") + ':</label>\
+                  <input type="text" name="ds_tab_custom_ds_mad" />\
+                </div>\
               </div>\
               <div class="one columns ">\
               </div>\
@@ -190,7 +195,12 @@ var create_datastore_tmpl =
                   <option value="lvm">' + tr("LVM") + '</option>\
                   <option value="vmfs">' + tr("VMFS") + '</option>\
                   <option value="ceph">' + tr("Ceph") + '</option>\
+                  <option value="custom">' + tr("Custom") + '</option>\
                 </select>\
+                <div>\
+                  <label>' + tr("Custom TM_MAD") + ':</label>\
+                  <input type="text" name="ds_tab_custom_tm_mad" />\
+                </div>\
               </div>\
               <div class="one columns ">\
               </div>\
@@ -273,24 +283,28 @@ var create_datastore_tmpl =
     <hr>\
     <div class="form_buttons">\
         <button class="button radius right success" type="submit" id="create_datastore_submit" value="OpenNebula.Datastore.create">' + tr("Create") + '</button>\
-        <button class="button radius secondary" type="reset" value="reset">' + tr("Reset") + '</button>\
+        <button id="wizard_ds_reset_button" class="button radius secondary" type="reset" value="reset">' + tr("Reset") + '</button>\
         <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
     </div>\
   </div>\
     </li>\
       <li id="datastore_manualTab">\
-              <div class="columns three">\
-                   <label class="inline left" for="datastore_cluster_raw">'+tr("Cluster")+':</label>\
-                 </div>\
-                 <div class="columns nine">\
-                   <select id="datastore_cluster_raw" name="datastore_cluster_raw"></select>\
-                 </div>\
-                 <textarea id="template" rows="15" style="width:100%;"></textarea>\
+          <div class="row">\
+            <div class="columns three">\
+               <label class="inline left" for="datastore_cluster_raw">'+tr("Cluster")+':</label>\
+             </div>\
+             <div class="columns nine">\
+               <select id="datastore_cluster_raw" name="datastore_cluster_raw"></select>\
+             </div>\
+            </div>\
+            <div class="row">\
+                 <textarea id="template" rows="15"></textarea>\
+            </div>\
           <div class="reveal-footer">\
                <hr>\
                <div class="form_buttons">\
                  <button class="button success radius right" id="create_datastore_submit_manual" value="datastore/create">'+tr("Create")+'</button>\
-                 <button class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
+                 <button  id="advanced_ds_reset_button" class="button secondary radius" type="reset" value="reset">'+tr("Reset")+'</button>\
                  <button class="close-reveal-modal button secondary radius" type="button" value="close">' + tr("Close") + '</button>\
                </div>\
           </div>\
@@ -746,6 +760,13 @@ function updateDatastoreInfo(request,ds){
     Sunstone.updateInfoPanelTab("datastore_info_panel","datastore_image_tab",datastore_info_tab);
     Sunstone.popUpInfoPanel("datastore_info_panel", "datastores-tab");
 
+
+
+    $("#datastore_info_panel_refresh", $("#datastore_info_panel")).click(function(){
+      $(this).html(spinner);
+      Sunstone.runAction('Datastore.showinfo', info.ID);
+    })
+
     // Define datatables
     // Images datatable
 
@@ -790,6 +811,9 @@ function hide_all(context)
     $('select#disk_type').children('option').each(function() {
       $(this).removeAttr('disabled');
     });
+
+    $('input[name="ds_tab_custom_ds_mad"]', context).parent().hide();
+    $('input[name="ds_tab_custom_tm_mad"]', context).parent().hide();
 }
 
 // Set up the create datastore dialog
@@ -805,8 +829,26 @@ function setupCreateDatastoreDialog(){
 
     setupTips(dialog);
 
+    // Show custom driver input only when custom is selected in selects
+    $('input[name="ds_tab_custom_ds_mad"],'+
+      'input[name="ds_tab_custom_tm_mad"]',dialog).parent().hide();
+
+    $('select#ds_mad',dialog).change(function(){
+        if ($(this).val()=="custom")
+            $('input[name="ds_tab_custom_ds_mad"]').parent().show();
+        else
+            $('input[name="ds_tab_custom_ds_mad"]').parent().hide();
+    });
+
+    $('select#tm_mad',dialog).change(function(){
+        if ($(this).val()=="custom")
+            $('input[name="ds_tab_custom_tm_mad"]').parent().show();
+        else
+            $('input[name="ds_tab_custom_tm_mad"]').parent().hide();
+    });
+
     $('#presets').change(function(){
-        hide_all($(this).parent());
+        hide_all(dialog);
         var choice_str = $(this).val();
         switch(choice_str)
         {
@@ -841,7 +883,9 @@ function setupCreateDatastoreDialog(){
         var cluster_id      = $('#cluster_id',context).val();
         var ds_type         = $('input[name=ds_type]:checked',context).val();
         var ds_mad          = $('#ds_mad',context).val();
+        ds_mad              = ds_mad == "custom" ? $('input[name="ds_tab_custom_ds_mad"]').val() : ds_mad;
         var tm_mad          = $('#tm_mad',context).val();
+        tm_mad              = tm_mad == "custom" ? $('input[name="ds_tab_custom_tm_mad"]').val() : tm_mad;
         var type            = $('#disk_type',context).val();
         var safe_dirs       = $('#safe_dirs',context).val();
         var restricted_dirs = $('#restricted_dirs',context).val();
@@ -870,7 +914,7 @@ function setupCreateDatastoreDialog(){
         // If we are adding a system datastore then
         // we do not use ds_mad
         if (ds_type != "SYSTEM_DS")
-            s_obj.datastore.ds_mad = ds_mad;
+            ds_obj.datastore.ds_mad = ds_mad;
 
         if (safe_dirs)
             ds_obj.datastore.safe_dirs = safe_dirs;
@@ -920,6 +964,23 @@ function setupCreateDatastoreDialog(){
         Sunstone.runAction("Datastore.create",ds_obj);
         $create_datastore_dialog.trigger("reveal:close")
         return false;
+    });
+
+    $('#wizard_ds_reset_button').click(function(){
+        $create_datastore_dialog.trigger('reveal:close');
+        $create_datastore_dialog.remove();
+        setupCreateDatastoreDialog();
+
+        popUpCreateDatastoreDialog();
+    });
+
+    $('#advanced_ds_reset_button').click(function(){
+        $create_datastore_dialog.trigger('reveal:close');
+        $create_datastore_dialog.remove();
+        setupCreateDatastoreDialog();
+
+        popUpCreateDatastoreDialog();
+        $("a[href='#datastore_manual']").click();
     });
 }
 
@@ -1035,7 +1096,7 @@ function setDatastoreAutorefresh(){
      setInterval(function(){
          var checked = $('input.check_item:checked',dataTable_datastores);
          var filter = $("#datastore_search").attr('value');
-         if (!checked.length && !filter.length){
+         if ((checked.length==0) && !filter){
              Sunstone.runAction("Datastore.autorefresh");
          };
      },INTERVAL+someTime());

@@ -92,7 +92,7 @@ function unarchive
 
     case "$file_type" in
     "application/x-tar")
-        command="sudo tar -xf $IN -C $OUT"
+        command="tar -xf $IN -C $OUT"
         ;;
     "application/zip")
         command="unzip -d $OUT $IN"

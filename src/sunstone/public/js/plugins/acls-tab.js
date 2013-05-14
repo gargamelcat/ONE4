@@ -251,19 +251,6 @@ var acls_tab = {
     parentTab: 'system-tab'
 }
 
-//Monitoring for ACLs - just count how many
-SunstoneMonitoringConfig['ACL'] = {
-    plot: function(monitoring){
-        //$('#totalAcls', $dashboard).text(monitoring['totalAcls'])
-    },
-    monitor: {
-        "totalAcls" : {
-            operation: SunstoneMonitoring.ops.totalize
-        }
-    }
-}
-
-
 Sunstone.addActions(acl_actions);
 Sunstone.addMainTab('acls-tab',acls_tab);
 
@@ -414,9 +401,8 @@ function updateAclsView(request,list){
     $.each(list,function(){
         list_array.push(aclElementArray(this));
     });
-    SunstoneMonitoring.monitor('ACL', list)
+
     updateView(list_array,dataTable_acls);
-    updateSystemDashboard("acls",list);
 }
 
 function setupCreateAclDialog(){
@@ -603,7 +589,7 @@ function setAclAutorefresh(){
     setInterval(function(){
         var checked = $('input.check_item:checked',dataTable_acls);
         var filter = $('#acl_search').attr('value');
-        if (!checked.length && !filter.length){
+        if ((checked.length==0) && !filter){
             Sunstone.runAction("Acl.autorefresh");
         }
     },INTERVAL+someTime());
@@ -625,7 +611,7 @@ $(document).ready(function(){
 
 
     $('#acl_search').keyup(function(){
-      dataTable_templates.fnFilter( $(this).val() );
+      dataTable_acls.fnFilter( $(this).val() );
     })
 
     //addElement([
