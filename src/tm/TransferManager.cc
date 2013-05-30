@@ -255,7 +255,7 @@ int TransferManager::prolog_transfer_command(
     if ( type == "SWAP" )
     {
         // -----------------------------------------------------------------
-        // Generate a swap disk image
+        // Generate a swap disk image ok
         // -----------------------------------------------------------------
         size = disk->vector_value("SIZE");
 
