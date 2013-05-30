@@ -1,7 +1,8 @@
-
 OpenNebula - The OpenSource Toolkit for Cloud Computing
 
 ## DESCRIPTION
+
+Open Nebula 4.0 with LXC drivers, currently under developement
 
 OpenNebula is an open-source project aimed at building the industry standard
 open source cloud computing tool to manage the complexity and heterogeneity of
